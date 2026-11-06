@@ -2,7 +2,7 @@ name: judge models
 on:
   workflow_dispatch:
     inputs:
-      stage: { description: 'bench | bench1 | gen | train | student | onnx | batch | alldata | long | combine | lcurve | qd | qdb (continue qd from run_id) | bc', required: true, default: 'bench' }
+      stage: { description: 'bench | bench1 | gen | train | student | onnx | batch | alldata | long | combine | lcurve | qd | qds (search scored on steered lines) | qdb (continue qd from run_id) | bc', required: true, default: 'bench' }
       teacher: { description: 'model key from bench.json', required: false, default: 'dinov2_vits14' }
       batch: { description: 'batch id (batch stage)', required: false, default: 'b1' }
       arms: { description: 'ab (dino/walk), explore, r2 or r3', required: false, default: 'ab' }
@@ -237,9 +237,9 @@ jobs:
           git config user.name "taste-bot"; git config user.email "taste-bot@users.noreply.github.com"
           git add distill/combine.json distill/lcurve.json; git commit -m "${{ inputs.stage }}" && for i in 1 2 3; do git pull --rebase && git push && break; sleep 5; done
   qd1:
-    if: inputs.stage == 'qd'
+    if: inputs.stage == 'qd' || inputs.stage == 'qds'
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 200
     strategy:
       fail-fast: false
       matrix: { job: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24] }
@@ -251,12 +251,13 @@ jobs:
         run: |
           npm i -s --no-save onnxruntime-node@1.20.1
           node -e "const fs=require('fs'),J=require('./onnx/judge.json');let b='';for(let k=0;k<J.parts;k++)b+=fs.readFileSync('onnx/judge_'+k+'.txt','utf8');fs.writeFileSync('judge.onnx',Buffer.from(b,'base64'))"
-          for k in 0 1 2 3; do node qd.js run $(( ${{ matrix.job }} * 4 + k + 1 )) 20 a_$k.json & done; wait
+          export STEER=${{ inputs.stage == 'qds' && '6' || '0' }}; M=${{ inputs.stage == 'qds' && '110' || '20' }}
+          for k in 0 1 2 3; do node qd.js run $(( ${{ matrix.job }} * 4 + k + 1 )) $M a_$k.json & done; wait
           node qd.js merge qd1_${{ matrix.job }}.json a_0.json a_1.json a_2.json a_3.json
       - uses: actions/upload-artifact@v4
         with: { name: 'qd1-${{ matrix.job }}', path: 'distill/qd1_${{ matrix.job }}.json' }
   qdm1:
-    if: always() && ((inputs.stage == 'qd' && needs.qd1.result != 'cancelled') || inputs.stage == 'qdb')
+    if: always() && (((inputs.stage == 'qd' || inputs.stage == 'qds') && needs.qd1.result != 'cancelled') || inputs.stage == 'qdb')
     needs: qd1
     runs-on: ubuntu-latest
     steps:
@@ -269,10 +270,10 @@ jobs:
       - uses: actions/upload-artifact@v4
         with: { name: 'qdm1', path: 'qd_m1.json' }
   qd2:
-    if: always() && needs.qdm1.result == 'success' && (inputs.stage == 'qd' || inputs.stage == 'qdb')
+    if: always() && needs.qdm1.result == 'success' && (inputs.stage == 'qd' || inputs.stage == 'qds' || inputs.stage == 'qdb')
     needs: qdm1
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 200
     strategy:
       fail-fast: false
       matrix: { job: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24] }
@@ -286,12 +287,13 @@ jobs:
         run: |
           npm i -s --no-save onnxruntime-node@1.20.1
           node -e "const fs=require('fs'),J=require('./onnx/judge.json');let b='';for(let k=0;k<J.parts;k++)b+=fs.readFileSync('onnx/judge_'+k+'.txt','utf8');fs.writeFileSync('judge.onnx',Buffer.from(b,'base64'))"
-          for k in 0 1 2 3; do node qd.js run $(( ${{ matrix.job }} * 4 + k + 501 )) 20 b_$k.json qd_m1.json & done; wait
+          export STEER=${{ inputs.stage == 'qds' && '6' || '0' }}; M=${{ inputs.stage == 'qds' && '110' || '20' }}
+          for k in 0 1 2 3; do node qd.js run $(( ${{ matrix.job }} * 4 + k + 501 )) $M b_$k.json qd_m1.json & done; wait
           node qd.js merge qd2_${{ matrix.job }}.json b_0.json b_1.json b_2.json b_3.json
       - uses: actions/upload-artifact@v4
         with: { name: 'qd2-${{ matrix.job }}', path: 'distill/qd2_${{ matrix.job }}.json' }
   qdm2:
-    if: always() && needs.qd2.result == 'success' && (inputs.stage == 'qd' || inputs.stage == 'qdb')
+    if: always() && needs.qd2.result == 'success' && (inputs.stage == 'qd' || inputs.stage == 'qds' || inputs.stage == 'qdb')
     needs: qd2
     runs-on: ubuntu-latest
     steps:
@@ -304,10 +306,10 @@ jobs:
       - uses: actions/upload-artifact@v4
         with: { name: 'qdm2', path: 'qd_m2.json' }
   qdre:
-    if: always() && needs.qdm2.result == 'success' && (inputs.stage == 'qd' || inputs.stage == 'qdb')
+    if: always() && needs.qdm2.result == 'success' && (inputs.stage == 'qd' || inputs.stage == 'qds' || inputs.stage == 'qdb')
     needs: qdm2
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 200
     strategy:
       fail-fast: false
       matrix: { job: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24] }
@@ -321,12 +323,13 @@ jobs:
         run: |
           npm i -s --no-save onnxruntime-node@1.20.1
           node -e "const fs=require('fs'),J=require('./onnx/judge.json');let b='';for(let k=0;k<J.parts;k++)b+=fs.readFileSync('onnx/judge_'+k+'.txt','utf8');fs.writeFileSync('judge.onnx',Buffer.from(b,'base64'))"
+          export STEER=${{ inputs.stage == 'qds' && '6' || '0' }}
           for k in 0 1 2 3; do node qd.js reeval qd_m2.json 8 $(( ${{ matrix.job }} * 4 + k )) 100 r_$k.json & done; wait
           node -e "const fs=require('fs');let o={};for(const k of [0,1,2,3])Object.assign(o,JSON.parse(fs.readFileSync('r_'+k+'.json')));fs.writeFileSync('qdre_${{ matrix.job }}.json',JSON.stringify(o))"
       - uses: actions/upload-artifact@v4
         with: { name: 'qdre-${{ matrix.job }}', path: 'distill/qdre_${{ matrix.job }}.json' }
   qdfinal:
-    if: always() && needs.qdre.result == 'success' && (inputs.stage == 'qd' || inputs.stage == 'qdb')
+    if: always() && needs.qdre.result == 'success' && (inputs.stage == 'qd' || inputs.stage == 'qds' || inputs.stage == 'qdb')
     needs: qdre
     runs-on: ubuntu-latest
     steps:
@@ -338,7 +341,7 @@ jobs:
       - run: |
           node -e "const fs=require('fs');let o={};for(const f of fs.readdirSync('parts'))Object.assign(o,JSON.parse(fs.readFileSync('parts/'+f)));fs.writeFileSync('distill/qd_archive.json',JSON.stringify(o,null,0));const v=Object.values(o);console.log('cells',v.length,'fresh mean',v.reduce((a,e)=>a+(e.fresh||0),0)/v.length)"
           git config user.name "taste-bot"; git config user.email "taste-bot@users.noreply.github.com"
-          git add distill/qd_archive.json && git commit -m "quality-diversity archive" && for i in 1 2 3; do git pull --rebase && git push && break; sleep 5; done
+          f=distill/qd_archive${{ inputs.stage == 'qds' && '_steered' || '' }}.json; [ "$f" != distill/qd_archive.json ] && mv distill/qd_archive.json $f; git add $f && git commit -m "quality-diversity archive (${{ inputs.stage }})" && for i in 1 2 3; do git pull --rebase && git push && break; sleep 5; done
   bc:
     if: inputs.stage == 'bc'
     runs-on: ubuntu-latest
@@ -358,7 +361,7 @@ jobs:
   longgen:
     if: inputs.stage == 'long'
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 200
     strategy:
       fail-fast: false
       matrix: { job: [0,1,2,3,4,5] }

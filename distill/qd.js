@@ -12,6 +12,7 @@ const fs = require('fs'), W = require('./walkmods.js'), PJ = require('./pickjudg
 let ort; const ORT = () => ort || (ort = require('onnxruntime-node'));
 const PJS = PJ.make(Object.assign({}, JSON.parse(fs.readFileSync(__dirname + '/pickjudge_w.json')), { scale: 3 })), J2 = (w, wt, all) => W.judge(w, wt, all) + PJS(w, wt, all);
 const POOL = JSON.parse(fs.readFileSync(__dirname + '/path_pool.json')), JM = JSON.parse(fs.readFileSync(__dirname + '/onnx/judge.json')), SECS = 12;
+const STEER = +(process.env.STEER || 0);
 const EGOOD = fs.existsSync(__dirname + '/explore_good.json') ? JSON.parse(fs.readFileSync(__dirname + '/explore_good.json')) : [];
 const KEYS = Object.keys(POOL[0]).filter(k => typeof POOL[0][k] === 'number'), RANGE = {}, UNIT = ['gFlip', 'keepCurl', 'pMid', 'rho', 'speedRho', 'jagTaper', 'beta', 'weight'];
 const POS = ['gAmp', 'sigma', 'speedSigma', 'jagRate', 'span', 'rate', 'pulseSigma', 'gPeriod', 'jagLeg', 'absMu'];
@@ -47,7 +48,17 @@ async function evaluate(g, seeds) {   // plain walk (as the walk arm: half the t
   const wins = [], D = [];
   for (const seed of seeds) {
     const r = W.LineGen.mulberry(seed * 13 + 7), pick = r() < 0.5, S = W.Steer.create(optsOf(g, seed)); S.o.arena = 7; const JJ = pick ? J2 : W.judge;
-    while (S.t < SECS) { W.Steer.step(S, JJ); if (S.comps.length > 400) S.comps = S.comps.slice(-200); }
+    if (!STEER) { while (S.t < SECS) { W.Steer.step(S, JJ); if (S.comps.length > 400) S.comps = S.comps.slice(-200); } }
+    else {   // steered, as the round 4 winner: every 3 s, STEER candidate futures, soft choice by the judge
+      let sd = seed * 7919;
+      while (S.t < SECS) {
+        const cands = [], t1 = Math.min(SECS, S.t + 3);
+        for (let k = 0; k < STEER; k++) { const C = { o: S.o, r: W.LineGen.mulberry(++sd), st: JSON.parse(JSON.stringify(S.st)), comps: S.comps.slice(), pts: S.pts, x: S.x, y: S.y, t: S.t, choices: [] }; while (C.t < t1) { W.Steer.step(C, JJ); if (C.comps.length > 400) C.comps = C.comps.slice(-200); } cands.push(C); }
+        const sc = await judgeMany(cands.map(c => R.windowOf(c.pts))), mx = Math.max(...sc), ws = sc.map(v => Math.exp((v - mx) / (0.3 * JM.score_sd))); let u = r() * ws.reduce((a, b) => a + b, 0), c = 0;
+        for (; c < ws.length - 1; c++) { u -= ws[c]; if (u <= 0) break; }
+        const C = cands[c]; S.st = C.st; S.comps = C.comps; S.pts = C.pts; S.x = C.x; S.y = C.y; S.t = C.t;
+      }
+    }
     const win = R.windowOf(S.pts.filter(p => p[3] <= SECS * 1000)); wins.push(win); D.push(describe(win));
   }
   const sc = await judgeMany(wins), ok = D.filter(Boolean); if (!ok.length) return null;
@@ -58,9 +69,10 @@ async function load() { if (!fs.existsSync('judge.onnx')) { let b = ''; for (let
 
 async function run(seed, minutes, out, start) {
   await load(); const rnd = W.LineGen.mulberry(seed * 977 + 1), gauss = () => Math.sqrt(-2 * Math.log(rnd() + 1e-12)) * Math.cos(2 * Math.PI * rnd());
-  const arc = start ? JSON.parse(fs.readFileSync(start)) : {}, NS = 3; let sd = seed * 100000, n = 0, added = 0; const t0 = Date.now();
+  const arc = start ? JSON.parse(fs.readFileSync(start)) : {}, NS = STEER ? 2 : 3; let sd = seed * 100000, n = 0, added = 0; const t0 = Date.now();
   const place = (g, e, from) => { if (!e) return; const cur = arc[e.cell]; if (!cur || e.score > cur.score) { arc[e.cell] = { g, score: +e.score.toFixed(4), scores: e.scores, beh: e.beh, from }; added++; } };
-  if (!start) for (const g0 of POOL.concat(EGOOD)) { const g = clean(g0); place(g, await evaluate(g, [++sd, ++sd, ++sd]), g0.src || 'explore'); n++; if (Date.now() - t0 > minutes * 30e3) break; }
+  const INIT = STEER && fs.existsSync(__dirname + '/qd_archive.json') ? Object.values(JSON.parse(fs.readFileSync(__dirname + '/qd_archive.json'))).map(e => e.g).concat(POOL) : POOL.concat(EGOOD);
+  if (!start) for (const g0 of INIT.sort(() => rnd() - 0.5)) { const g = clean(g0); place(g, await evaluate(g, Array.from({ length: NS }, () => ++sd)), g0.src || 'explore'); n++; if (Date.now() - t0 > minutes * 30e3) break; }
   while (Date.now() - t0 < minutes * 60e3) {
     const cells = Object.keys(arc), A = arc[cells[Math.floor(rnd() * cells.length)]].g, g = Object.assign({}, A), u = rnd();
     if (u < 0.25 && cells.length > 1) { const B = arc[cells[Math.floor(rnd() * cells.length)]].g; KEYS.forEach(k => { const m = rnd(); g[k] = A[k] + m * (B[k] - A[k]); }); }   // blend of two elites
