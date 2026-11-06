@@ -379,6 +379,137 @@ jobs:
       - run: |
           git config user.name "taste-bot"; git config user.email "taste-bot@users.noreply.github.com"
           git add distill/onnx_night && git commit -m "judges for the night: full, half A, half B, two image-feature axes" && for i in 1 2 3 4 5; do git pull --rebase && git push && break; sleep 7; done
+  n_dose:
+    if: inputs.stage == 'night'
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix: { job: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24] }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '22' }
+      - working-directory: distill
+        run: |
+          npm i -s --no-save onnxruntime-node@1.20.1
+          node -e "const fs=require('fs'),J=require('./onnx_night/judges.json');let b='';for(let k=0;k<J.parts;k++)b+=fs.readFileSync('onnx_night/judges_'+k+'.txt','utf8');fs.writeFileSync('judges.onnx',Buffer.from(b,'base64'))"
+          for k in 0 1 2 3; do node night.js dose $(( ${{ matrix.job }} * 4 + k )) 100 d_$k.json & done; wait
+          node -e "let a=[];for(const k of [0,1,2,3])a=a.concat(require('./d_'+k+'.json'));require('fs').writeFileSync('dose_${{ matrix.job }}.json',JSON.stringify(a))"
+      - uses: actions/upload-artifact@v4
+        with: { name: 'dose-${{ matrix.job }}', path: 'distill/dose_${{ matrix.job }}.json' }
+  n_pick:
+    if: always() && inputs.stage == 'night' && needs.n_dose.result != 'cancelled'
+    needs: n_dose
+    runs-on: ubuntu-latest
+    outputs:
+      lam: ${{ steps.p.outputs.lam }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '22' }
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.11' }
+      - uses: actions/download-artifact@v4
+        with: { path: distill/doseparts, pattern: 'dose-*', merge-multiple: true }
+      - id: p
+        working-directory: distill
+        run: |
+          pip install --quiet numpy
+          python nightcollect.py pick doseparts/*.json
+          echo "lam=$(cat lambda.txt)" >> "$GITHUB_OUTPUT"
+      - uses: actions/upload-artifact@v4
+        with: { name: 'dose-summary', path: 'distill/night_results/dose_summary.json' }
+  n_search:
+    if: always() && inputs.stage == 'night' && needs.n_pick.result == 'success'
+    needs: n_pick
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    strategy:
+      fail-fast: false
+      matrix: { island: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19] }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '22' }
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.11' }
+      - working-directory: distill
+        run: |
+          pip install --quiet numpy "ribs==0.7.1"
+          npm i -s --no-save onnxruntime-node@1.20.1
+          node -e "const fs=require('fs'),J=require('./onnx_night/judges.json');let b='';for(let k=0;k<J.parts;k++)b+=fs.readFileSync('onnx_night/judges_'+k+'.txt','utf8');fs.writeFileSync('judges.onnx',Buffer.from(b,'base64'))"
+          python search.py ${{ matrix.island }} 235 ${{ needs.n_pick.outputs.lam }} island_${{ matrix.island }}.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: 'island-${{ matrix.island }}', path: 'distill/island_${{ matrix.island }}.json' }
+  n_cands:
+    if: always() && inputs.stage == 'night' && needs.n_pick.result == 'success' && needs.n_search.result != 'cancelled'
+    needs: [n_pick, n_search]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '22' }
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.11' }
+      - uses: actions/download-artifact@v4
+        with: { path: distill/islands, pattern: 'island-*', merge-multiple: true }
+      - working-directory: distill
+        run: |
+          pip install --quiet numpy
+          python nightcollect.py cands islands/*.json
+      - uses: actions/upload-artifact@v4
+        with: { name: 'cands', path: 'distill/cands.json' }
+      - uses: actions/upload-artifact@v4
+        with: { name: 'search-log', path: 'distill/night_results/search_log.json' }
+  n_rescore:
+    if: always() && inputs.stage == 'night' && needs.n_cands.result == 'success'
+    needs: [n_pick, n_cands]
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix: { job: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24] }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '22' }
+      - uses: actions/download-artifact@v4
+        with: { name: 'cands', path: distill }
+      - working-directory: distill
+        run: |
+          npm i -s --no-save onnxruntime-node@1.20.1
+          node -e "const fs=require('fs'),J=require('./onnx_night/judges.json');let b='';for(let k=0;k<J.parts;k++)b+=fs.readFileSync('onnx_night/judges_'+k+'.txt','utf8');fs.writeFileSync('judges.onnx',Buffer.from(b,'base64'))"
+          for k in 0 1 2 3; do node night.js rescore cands.json $(( ${{ matrix.job }} * 4 + k )) 100 r_$k.json ${{ needs.n_pick.outputs.lam }} & done; wait
+          node -e "let a=[];for(const k of [0,1,2,3])a=a.concat(require('./r_'+k+'.json'));require('fs').writeFileSync('rescore_${{ matrix.job }}.json',JSON.stringify(a))"
+      - uses: actions/upload-artifact@v4
+        with: { name: 'rescore-${{ matrix.job }}', path: 'distill/rescore_${{ matrix.job }}.json' }
+  n_final:
+    if: always() && inputs.stage == 'night' && needs.n_pick.result == 'success'
+    needs: [n_pick, n_cands, n_rescore]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '22' }
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.11' }
+      - uses: actions/download-artifact@v4
+        with: { path: distill/rs, pattern: 'rescore-*', merge-multiple: true }
+      - uses: actions/download-artifact@v4
+        with: { name: 'dose-summary', path: distill/night_results }
+        continue-on-error: true
+      - uses: actions/download-artifact@v4
+        with: { name: 'search-log', path: distill/night_results }
+        continue-on-error: true
+      - working-directory: distill
+        run: |
+          pip install --quiet numpy
+          ls rs | head; python nightcollect.py final rs/*.json || echo "final step had nothing to collect"
+      - run: |
+          git config user.name "taste-bot"; git config user.email "taste-bot@users.noreply.github.com"
+          git add distill/night_results && git commit -m "overnight results: pressure sweep, CMA-MAE search, fresh-seed rescoring" && for i in 1 2 3 4 5; do git pull --rebase && git push && break; sleep 7; done
   longgen:
     if: inputs.stage == 'long'
     runs-on: ubuntu-latest
