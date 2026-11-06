@@ -2,7 +2,7 @@ name: judge models
 on:
   workflow_dispatch:
     inputs:
-      stage: { description: 'bench | bench1 | gen | train | student | onnx | batch | alldata | long | combine | lcurve | qd | qds (search scored on steered lines) | qdb (continue qd from run_id) | bc', required: true, default: 'bench' }
+      stage: { description: 'bench | bench1 | gen | train | student | onnx | batch | alldata | long | combine | lcurve | qd | qds (search scored on steered lines) | qdb (continue qd from run_id) | bc | judges | night', required: true, default: 'bench' }
       teacher: { description: 'model key from bench.json', required: false, default: 'dinov2_vits14' }
       batch: { description: 'batch id (batch stage)', required: false, default: 'b1' }
       arms: { description: 'ab (dino/walk), explore, r2 or r3', required: false, default: 'ab' }
@@ -358,6 +358,27 @@ jobs:
       - run: |
           git config user.name "taste-bot"; git config user.email "taste-bot@users.noreply.github.com"
           git add distill/bc_policy.json distill/bc_parity.json distill/bc_log.txt && git commit -m "step policy (behavioural cloning)" && for i in 1 2 3 4 5; do git pull --rebase && git push && break; sleep 7; done
+  judges:
+    if: inputs.stage == 'judges'
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '22' }
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.11' }
+      - run: |
+          pip install --quiet torch torchvision --index-url https://download.pytorch.org/whl/cpu
+          pip install --quiet pillow numpy scikit-learn onnx onnxruntime
+      - working-directory: distill
+        run: |
+          mkdir -p data && node rast.js ../feed/all_labels.json 224 data/lab224
+          python nightjudges.py
+          mkdir -p onnx_night && python -c "import base64;b=base64.b64encode(open('judges.onnx','rb').read()).decode();n=15000000;P=[b[i:i+n] for i in range(0,len(b),n)];[open(f'onnx_night/judges_{k}.txt','w').write(p) for k,p in enumerate(P)];import json;J=json.load(open('judges.json'));J['parts']=len(P);json.dump(J,open('onnx_night/judges.json','w'),indent=1);print('parts',len(P))"
+      - run: |
+          git config user.name "taste-bot"; git config user.email "taste-bot@users.noreply.github.com"
+          git add distill/onnx_night && git commit -m "judges for the night: full, half A, half B, two image-feature axes" && for i in 1 2 3 4 5; do git pull --rebase && git push && break; sleep 7; done
   longgen:
     if: inputs.stage == 'long'
     runs-on: ubuntu-latest
