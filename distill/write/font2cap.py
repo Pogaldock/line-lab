@@ -85,16 +85,23 @@ def shortest(c, s, t):
     while u != s: u, k = prev[u]; path.append(k)
     return dist[t], path
 
+LOOP = 0.045 * HGT     # loop width for re-traced stems
 strokes = []
 for c, *_ in info:
     d = degrees([edges[k] for k in c])
     odd = sorted([n for n in d if d[n] % 2], key=lambda n: nodexy[n][0])
     multi = list(c)                                    # edge list, re-traced branches appear twice
     if odd:
-        start, rest = odd[0], odd[1:-1]
-        while rest:                                    # pair the inner loose ends by shortest re-trace
-            a = rest.pop(0); best = min(rest, key=lambda b: shortest(c, a, b)[0]); rest.remove(best)
-            multi += shortest(c, a, best)[1]
+        # start at the leftmost loose end; finish at whichever loose end needs the least re-tracing (a little
+        # preference for ends further right), then pair the remaining loose ends by shortest re-trace
+        start = odd[0]; xr = max(nodexy[n][0] for n in odd); plan = None
+        for end in odd[1:]:
+            rest = [n for n in odd[1:] if n != end]; extra, cost = [], 0.25 * (xr - nodexy[end][0])
+            while rest:
+                a = rest.pop(0); best = min(rest, key=lambda b: shortest(c, a, b)[0]); rest.remove(best)
+                L, p = shortest(c, a, best); extra += p; cost += L
+            if plan is None or cost < plan[0]: plan = (cost, extra)
+        multi += plan[1]
     else:
         start = min(d, key=lambda n: nodexy[n][0])
     unused = list(range(len(multi)))
@@ -112,6 +119,7 @@ for c, *_ in info:
                 if v not in seen: seen.add(v); st.append(v)
         return all(edges[k]['a'] in seen for k in left)
     node, stroke, heading = start, [], None
+    passes = {}
     while unused:
         nxt = [i for i in unused if node in (edges[multi[i]]['a'], edges[multi[i]]['b'])]
         if not nxt: break
@@ -121,7 +129,21 @@ for c, *_ in info:
         nxt.sort(key=turn)                              # straightest first, but never strand the rest (Fleury)
         pick = next((i for i in nxt if connected_after(i, node)), nxt[0])
         k = multi[pick]; unused.remove(pick)
-        pts = oriented(k, node); stroke += pts if not stroke else pts[1:]
+        pts = oriented(k, node); passes[k] = passes.get(k, 0) + 1
+        if passes[k] == 2:
+            # second pass over a stem (b, h, m...): run it alongside the first pass instead of on top, so the pen draws a
+            # narrow loop it can actually turn round, like a looped cursive ascender. Full offset at a loose end, none at a crossing.
+            other = edges[k]['b'] if edges[k]['a'] == node else edges[k]['a']
+            dg = degrees([edges[j] for j in c])
+            r0, r1 = (LOOP if dg[node] == 1 else 0), (LOOP if dg[other] == 1 else 0)
+            P = np.array(pts); n = len(P); moved = []
+            for i in range(n):
+                a, b = P[max(0, i - 3)], P[min(n - 1, i + 3)]; t = b - a; L = math.hypot(*t) or 1
+                nx, ny = -t[1] / L, t[0] / L; u = i / max(1, n - 1)
+                off = r0 * (1 - u) + r1 * u if (r0 and r1) else (r0 * (1 - u) ** 0.5 if r0 else r1 * u ** 0.5) if (r0 or r1) else LOOP * 0.6 * math.sin(math.pi * u)
+                moved.append((P[i][0] + nx * off, P[i][1] + ny * off))
+            pts = moved
+        stroke += pts if not stroke else pts[1:]
         node = edges[k]['b'] if edges[k]['a'] == node else edges[k]['a']
         heading = tangent(stroke[::-1]) + math.pi
     strokes.append(stroke)
