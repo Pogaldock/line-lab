@@ -4,3 +4,4 @@ distill/judge.onnx
 distill/judges.onnx
 distill/write/m*.png
 distill/write/m_*.json
+distill/write/s_*.json
