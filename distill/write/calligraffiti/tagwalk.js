@@ -15,8 +15,13 @@ let rs = +seed * 977 + 3; const rnd = () => (rs = (rs * 9301 + 49297) % 233280) 
 const plan = [], guide = []; let x = 0;
 const free = (T, n, last) => plan.push({ type: 'free', T, arrive: last ? 0 : 3.5, gFar: 0.06, gNear: 0.35, minPulses: n, maxPulses: n + 14, last });
 free([-6, -4], 10);
-tags.forEach((tag, ti) => {
-  const k = K * (0.85 + 0.35 * rnd()), y0 = (rnd() - 0.5) * 7, G = CG.word(tag);
+// PERLETTER: the walk switches into letter mode for one letter, then straight back to free walk until the next letter
+const PERLETTER = +(process.env.PERLETTER || 0), LFREE = +(process.env.LFREE || 6), LGAP = +(process.env.LGAP || 1.6);
+const units = PERLETTER ? [].concat(...tags.map((t, ti) => [...t].map((ch, ci) => ({ tag: ch, wordStart: ci === 0, wordEnd: ci === t.length - 1, lastWord: ti === tags.length - 1 })))) : tags.map((t, ti) => ({ tag: t, wordStart: true, wordEnd: true, lastWord: ti === tags.length - 1 }));
+let wordK = K, wordY = 0;
+units.forEach((u, ti) => { const tag = u.tag;
+  if (u.wordStart) { wordK = K * (0.85 + 0.35 * rnd()); wordY = (rnd() - 0.5) * 7; }
+  const k = wordK, y0 = wordY + (PERLETTER ? (rnd() - 0.5) * 0.8 : 0), G = CG.word(tag);
   const runs = G.runs.map(Rn => Rn.map(p => [x + p[0] * k, y0 + p[1] * k]));
   const start = runs[0][0];
   // approach: arrive just before the first stroke, heading into it
@@ -32,8 +37,8 @@ tags.forEach((tag, ti) => {
     plan.push({ type: 'group', pulses: LT.fitPulses([a, b], { Dt: 1, maxTurn: 1, minD: 0.05 }).map((p, i) => Object.assign(p, i ? {} : { pause: 0.08 })), pts: [a, b] }); });
   const end = runs[runs.length - 1][runs[runs.length - 1].length - 1];
   if (G.extras.length) plan.push({ type: 'free', T: [end[0] + 2, end[1] - 0.5], arrive: 1.5, gFar: 0.35, gNear: 0.9, minPulses: 0, maxPulses: 14, approach: true, air: true });   // pen lifted back to where the word ended
-  x = end[0] + 14 + 6 * rnd();
-  if (ti < tags.length - 1) free([(end[0] + x) / 2, (rnd() < 0.5 ? -1 : 1) * (6 + 4 * rnd())], FREE);   // the walk's own stretch between tags
+  if (u.wordEnd) { x = end[0] + 14 + 6 * rnd(); if (!u.lastWord) free([(end[0] + x) / 2, (rnd() < 0.5 ? -1 : 1) * (6 + 4 * rnd())], FREE); }   // the walk's own stretch between tags
+  else { x = end[0] + LGAP * k * 0.5; free([end[0] + 0.5 * LGAP * k * 0.5, wordY + (rnd() < 0.5 ? -1 : 1) * k * (1.2 + 0.6 * rnd())], LFREE); }   // between letters: back to the walk for a moment, above or below the line
 });
 free([x + 6, (rnd() - 0.5) * 8], 12, true);
 
