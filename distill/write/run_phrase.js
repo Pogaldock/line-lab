@@ -4,7 +4,7 @@ const D = __dirname + '/../'; const fs = require('fs'), W = require(D + 'walkmod
 const out = process.argv[2], seed = +process.argv[3], caps = process.argv.slice(4).map(f => JSON.parse(fs.readFileSync(f)));
 const SJ = JSON.parse(fs.readFileSync(D + 'live/results/student_weights_b1.json')), F = ST.make(SJ);
 const top = JSON.parse(fs.readFileSync(D + 'night_results/final.json')).settings.filter(s => s.group === 'new').sort((a, b) => b.min_AB - a.min_AB);
-const { plan, guide } = LT.buildPlan(caps, { seed, up: +(process.env.UP || 17), excursions: +(process.env.EX || 1), wordGap: +(process.env.WGAP || 30), zone: +(process.env.ZONE || 10) }), SC = LT.makePlanScript(plan, { jD: 0.1, jA: 0.075, zoneScale: +(process.env.ZS || 3) });
+const { plan, guide } = LT.buildPlan(caps, { seed, height: +(process.env.H || 14), groupGap: +(process.env.GG || 4), up: +(process.env.UP || 17), excursions: +(process.env.EX || 1), wordGap: +(process.env.WGAP || 30), zone: +(process.env.ZONE || 10) }), SC = LT.makePlanScript(plan, { jD: 0.1, jA: 0.075, zoneScale: +(process.env.ZS || 3) });
 const E = L.create(W, R, top[0].g, seed, { lambda: 2 });
 const o = E.parts[0].o; o.arena = 1e4; o.script = SC.script; o.sense = SC.sense;
 (async () => {
