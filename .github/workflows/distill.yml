@@ -2,7 +2,7 @@ name: judge models
 on:
   workflow_dispatch:
     inputs:
-      stage: { description: 'bench | bench1 | gen | train | student | onnx | batch | alldata | long | combine | lcurve | qd | qds (search scored on steered lines) | qdb (continue qd from run_id) | bc | judges | night | nlong', required: true, default: 'bench' }
+      stage: { description: 'live (student judge for the live line; batch=b1 full, other = smoke test) | bench | bench1 | gen | train | student | onnx | batch | alldata | long | combine | lcurve | qd | qds (search scored on steered lines) | qdb (continue qd from run_id) | bc | judges | night | nlong', required: true, default: 'bench' }
       teacher: { description: 'model key from bench.json', required: false, default: 'dinov2_vits14' }
       batch: { description: 'batch id (batch stage)', required: false, default: 'b1' }
       arms: { description: 'ab (dino/walk), explore, r2 or r3', required: false, default: 'ab' }
@@ -573,3 +573,83 @@ jobs:
           mkdir -p distill/long && node -e "const fs=require('fs');let a=[];for(const d of fs.readdirSync('parts'))for(const f of fs.readdirSync('parts/'+d))a.push(JSON.parse(fs.readFileSync('parts/'+d+'/'+f)));a.sort((x,y)=>x.seg-y.seg);fs.writeFileSync('distill/long/skate.json',JSON.stringify(a));console.log('segments',a.length,'minutes',a.reduce((s,x)=>s+x.secs,0)/60)"
           git config user.name "taste-bot"; git config user.email "taste-bot@users.noreply.github.com"
           git add distill/long && git commit -m "long skater paths" && for i in 1 2 3; do git pull --rebase && git push && break; sleep 5; done
+  s_gen:
+    if: inputs.stage == 'live'
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix: { part: '${{ fromJSON(inputs.batch == ''b1'' && ''[0,1,2,3,4,5,6,7,8,9,10,11]'' || ''[0,1]'') }}' }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '22' }
+      - working-directory: distill
+        run: |
+          npm i -s --no-save onnxruntime-node@1.20.1
+          node -e "const fs=require('fs'),J=require('./onnx_night/judges.json');let b='';for(let k=0;k<J.parts;k++)b+=fs.readFileSync('onnx_night/judges_'+k+'.txt','utf8');fs.writeFileSync('judges.onnx',Buffer.from(b,'base64'))"
+          MIN=${{ inputs.batch == 'b1' && '25' || '2' }}
+          for k in 0 1 2 3; do node live/sgen.js $(( ${{ matrix.part }} * 4 + k )) $MIN sdata/p$(( ${{ matrix.part }} * 4 + k )) & done; wait
+      - uses: actions/upload-artifact@v4
+        with: { name: 'sdata-${{ matrix.part }}', path: 'distill/sdata', retention-days: 5 }
+  s_train:
+    if: always() && inputs.stage == 'live' && needs.s_gen.result != 'cancelled'
+    needs: s_gen
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.11' }
+      - uses: actions/download-artifact@v4
+        with: { path: distill/sdata, pattern: 'sdata-*', merge-multiple: true }
+      - working-directory: distill
+        run: |
+          pip install --quiet torch --index-url https://download.pytorch.org/whl/cpu
+          pip install --quiet numpy onnx onnxscript
+          ls sdata | head; EP=${{ inputs.batch == 'b1' && '8' || '1' }} python live/strain.py sdata
+      - uses: actions/upload-artifact@v4
+        with: { name: 'student', path: 'distill/student' }
+  s_val:
+    if: always() && inputs.stage == 'live' && needs.s_train.result == 'success'
+    needs: s_train
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix: { part: [0,1,2,3,4,5,6,7,8,9] }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '22' }
+      - uses: actions/download-artifact@v4
+        with: { name: student, path: distill/student }
+      - working-directory: distill
+        run: |
+          npm i -s --no-save onnxruntime-node@1.20.1
+          node -e "const fs=require('fs'),J=require('./onnx_night/judges.json');let b='';for(let k=0;k<J.parts;k++)b+=fs.readFileSync('onnx_night/judges_'+k+'.txt','utf8');fs.writeFileSync('judges.onnx',Buffer.from(b,'base64'))"
+          NS=${{ inputs.batch == 'b1' && '20' || '1' }}; SECS=${{ inputs.batch == 'b1' && '60' || '15' }}
+          for k in 0 1 2 3; do node live/sval.js $(( ${{ matrix.part }} * 4 + k )) 40 v_$k.json $NS $SECS & done; wait
+          node -e "let a=[];for(const k of [0,1,2,3])a=a.concat(require('./v_'+k+'.json'));require('fs').writeFileSync('val_${{ matrix.part }}.json',JSON.stringify(a))"
+      - uses: actions/upload-artifact@v4
+        with: { name: 'val-${{ matrix.part }}', path: 'distill/val_${{ matrix.part }}.json' }
+  s_final:
+    if: always() && inputs.stage == 'live' && needs.s_train.result == 'success'
+    needs: [s_train, s_val]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.11' }
+      - uses: actions/download-artifact@v4
+        with: { name: student, path: distill/student }
+      - uses: actions/download-artifact@v4
+        with: { path: distill/valparts, pattern: 'val-*', merge-multiple: true }
+      - working-directory: distill
+        run: |
+          pip install --quiet numpy
+          python live/ssum.py valparts/*.json || echo "no validation"
+          mkdir -p live/results && cp student/student.json live/results/student_${{ inputs.batch }}.json && cp student/student.onnx live/results/student_${{ inputs.batch }}.onnx && cp live/results/val.json live/results/val_${{ inputs.batch }}.json || true
+      - run: |
+          git config user.name "taste-bot"; git config user.email "taste-bot@users.noreply.github.com"
+          git add -f distill/live/results && git commit -m "live student judge: training report and validation (${{ inputs.batch }})" && for i in 1 2 3 4 5; do git pull --rebase && git push && break; sleep 7; done
