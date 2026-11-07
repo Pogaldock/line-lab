@@ -2,7 +2,9 @@
    layers. Input: ink image from Raster.raster(window, size) (0..1); output [full, A, B] in the big judges' units. */
 (function (root) {
   function make(J) {
-    const L = J.layers.map(l => Object.assign({}, l, l.w ? { w: Float32Array.from(l.w), b: Float32Array.from(l.b) } : {}));
+    // weights arrive either as plain arrays or packed as base64 float32 (smaller page)
+    const unpack = (v) => { if (typeof v !== 'string') return Float32Array.from(v); const s = typeof atob === 'function' ? atob(v) : Buffer.from(v, 'base64').toString('binary'), u = new Uint8Array(s.length); for (let i = 0; i < s.length; i++) u[i] = s.charCodeAt(i); return new Float32Array(u.buffer); };
+    const L = J.layers.map(l => Object.assign({}, l, l.w ? { w: unpack(l.w), b: unpack(l.b) } : {}));
     return function forward(ink) {
       let x = ink, C = 1, H = J.size, Wd = J.size;
       for (const l of L) {
