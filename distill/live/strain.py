@@ -35,7 +35,8 @@ def evaluate(model, X):
                 if abs(dt) > 0.1: n += 1; ok += (np.sign(ps[idx[a]] - ps[idx[b]]) == np.sign(dt))
     return {'r_full': r[0], 'r_A': r[1], 'r_B': r[2], 'r_minAB': float(np.corrcoef(ps, ts)[0, 1]), 'pair_agree': ok / max(1, n), 'pairs': int(n)}
 report = {}; best = None
-for S, w, ep in [(64, 16, int(os.environ.get('EP', 8))), (96, 16, int(os.environ.get('EP', 8)))]:
+SW = int(os.environ.get('SW', 16))   # width of the student (16 = the live one; wider follows the big judges more closely, costs more per window)
+for S, w, ep in [(64, SW, int(os.environ.get('EP', 8))), (96, SW, int(os.environ.get('EP', 8)))]:
     X = load(S); m = net(S, w); opt = torch.optim.AdamW(m.parameters(), 2e-3, weight_decay=1e-4); idx = np.flatnonzero(tr)
     sched = torch.optim.lr_scheduler.OneCycleLR(opt, 3e-3, total_steps=ep * (len(idx) // 256 + 1)); t0 = time.time()
     for e in range(ep):
