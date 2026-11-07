@@ -239,7 +239,7 @@ var self=globalThis;var window=self;
       st.ex += sp.D * Math.cos((sp.ts + sp.te) / 2); st.ey += sp.D * Math.sin((sp.ts + sp.te) / 2);
       st.h = sp.te; st.tau = Math.max(-1.6, Math.min(1.6, sp.te - sp.ts)); st.legLeft = 0; st.t0 += spacing * Math.sqrt(sp.D) * (0.85 + 0.3 * r()); return; } }
     if (st.legLeft > 0) {
-      var qL = (st.legN - st.legLeft) / Math.max(1, st.legN - 1), D0 = Math.exp(st.lD) * 1.35 * mD;
+      var qL = (st.legN - st.legLeft) / Math.max(1, st.legN - 1), D0 = Math.exp(st.lD) * 1.35 * mD * (st.dScale || 1);
       comps.push({ t0: st.t0, mu: mu, sg: sg, D: D0, ts: st.h, te: st.h + st.sweep, pw: 1.3 - qL * (0.3 + 0.95 * o.jagTaper) });
       if (st.ex != null) { st.ex += D0 * Math.cos(st.h + st.sweep / 2); st.ey += D0 * Math.sin(st.h + st.sweep / 2); }
       st.h += st.sweep; st.t0 += spacing * Math.sqrt(D0) * (0.85 + 0.3 * r()); st.legLeft--; if (!st.legLeft) st.gap = Math.max(2, Math.round(o.jagLeg * 0.8)); return;
@@ -254,7 +254,7 @@ var self=globalThis;var window=self;
     /* senses (optional, Nov 4 night): the walk proposes a turn, the senses may bend or override it (see senses.js) */
     if (o.sense && st.ex != null) tauAll = Math.max(-1.6, Math.min(1.6, o.sense(st, tauAll)));
     st.lD = o.speedRho * st.lD + o.speedSigma * Math.sqrt(1 - o.speedRho * o.speedRho) * G.gauss(r);
-    var D = Math.exp(st.lD) * mD * Math.max(0.55, Math.pow(1 + Math.abs(tauAll), -o.beta * 3));
+    var D = Math.exp(st.lD) * mD * Math.max(0.55, Math.pow(1 + Math.abs(tauAll), -o.beta * 3)) * (st.dScale || 1);   /* dScale: draw the free walk bigger (same shape, larger scale) */
     var pwG = st.gap > 0 ? 0.35 + 0.65 * (1 - st.gap / Math.max(2, Math.round(o.jagLeg * 0.8))) : 1;
     comps.push({ t0: st.t0, mu: mu, sg: sg, D: D, ts: st.h, te: st.h + tauAll, pw: pwG });
     if (st.ex != null) { st.ex += D * Math.cos(st.h + tauAll / 2); st.ey += D * Math.sin(st.h + tauAll / 2); st.turns = (st.turns || []).concat([tauAll]).slice(-12); }

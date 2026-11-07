@@ -94,3 +94,77 @@ function makeScript(groups, opt) {
 }
 
 module.exports = { fitPulses, buildScript, makeScript, resample };
+
+// ---- phrases: words far apart, free walk around them (Nov 7: "free stretches outside the word ... words spaced far apart") ----
+// A plan is a list of legs: free legs and letter groups (played pulse by pulse). A free leg is a wandering zone: the walk runs
+// on its own, only weakly pulled towards a point above or below the line, for at least minPulses (circling a point under a weak
+// pull is what makes it loop); after maxPulses the pull ramps up and brings it back. Zones: a lead-in before the first word, one
+// between words, optional ones between letter groups, and a tail after the last word. Each letter group is reached through an
+// approach leg (aim just before its first stroke, so the pen arrives heading the right way).
+// caps: one font capture per word. Returns { plan, guide } in pen units (y grows downwards; letters span roughly -9..+9).
+function buildPlan(caps, opt) {
+  opt = Object.assign({ height: 14, groupGap: 4, wordGap: 30, excursions: 1, up: 17, zone: 10, seed: 1 }, opt || {});
+  let s = opt.seed * 9301 + 49297; const rnd = () => (s = (s * 9301 + 49297) % 233280) / 233280;
+  const plan = [], guide = []; let side = rnd() < 0.5 ? -1 : 1, prevEnd = [0, 0], x = 14;
+  const zone = (cx, n) => { plan.push({ type: 'free', T: [cx, side * opt.up], arrive: 4, gFar: 0.12, gNear: 0.3, minPulses: n, maxPulses: n + 10 }); side = -side; };
+  zone(6, opt.zone);                                                   // lead-in
+  caps.forEach((cap, wi) => {
+    const groups = buildScript(cap, opt.height, opt.groupGap);
+    const exAt = new Set(); const nEx = Math.min(opt.excursions, Math.max(0, groups.length - 1));
+    while (exAt.size < nEx) exAt.add(1 + Math.floor(rnd() * (groups.length - 1)));
+    const wx0 = x - groups[0].pts[0][0];
+    groups.forEach((G, gi) => {
+      const pts = G.pts.map(p => [p[0] + wx0, p[1]]), start = pts[0];
+      if (gi === 0 && wi > 0) zone((prevEnd[0] + start[0]) / 2, Math.round(opt.zone * 1.4));   // between words
+      if (gi > 0 && exAt.has(gi)) zone((prevEnd[0] + start[0]) / 2, Math.round(opt.zone * 0.7));   // above/below the line inside a word
+      const p0 = G.pulses[0];
+      plan.push({ type: 'free', T: [start[0] - 1.2 * Math.cos(p0.ts), start[1] - 1.2 * Math.sin(p0.ts)], S: start, arrive: 1.0, gFar: 0.35, gNear: 0.9, minPulses: 0, maxPulses: 12, approach: true });
+      plan.push({ type: 'group', pulses: G.pulses, pts });
+      pts.forEach((p, i) => guide.push([p[0], p[1], i === 0 ? 1 : 0]));
+      prevEnd = pts[pts.length - 1];
+    });
+    x = prevEnd[0] + opt.wordGap;
+  });
+  plan.push({ type: 'free', T: [prevEnd[0] + 10, side * opt.up], arrive: 0, gFar: 0.1, gNear: 0.2, minPulses: opt.zone, maxPulses: opt.zone, last: true });   // tail: ends after its pulses
+  return { plan, guide };
+}
+
+function makePlanScript(plan, opt) {
+  opt = Object.assign({ jD: 0.07, jA: 0.05 }, opt || {});
+  const gauss = (r) => { const u = 1 - r(), v = r(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); };
+  function script(st, r) {
+    const sc = st.sc || (st.sc = { i: 0, k: 0, free: 0, done: 0 });
+    while (sc.i < plan.length) {
+      const L = plan[sc.i];
+      if (L.type === 'free') {
+        const dT = Math.hypot(L.T[0] - st.ex, L.T[1] - st.ey), dS = L.S ? Math.hypot(L.S[0] - st.ex, L.S[1] - st.ey) : 1e9;
+        const over = sc.free >= (L.maxPulses == null ? 1e9 : L.maxPulses);
+        if (!(L.last && over) && ((dT > L.arrive && dS > L.arrive) || sc.free < L.minPulses)) { sc.free++; st.dScale = L.approach ? 1 : (opt.zoneScale || 1); return null; }   // the walk's own pulse (bigger inside zones)
+        sc.i++; sc.free = 0; if (L.last) sc.tEnd = st.t0; continue;
+      }
+      st.dScale = 1; const p = L.pulses[sc.k]; sc.k++; sc.done++;
+      if (sc.k >= L.pulses.length) { sc.i++; sc.k = 0; }
+      const dA = opt.jA * gauss(r);
+      return { D: p.D * Math.exp(opt.jD * gauss(r)), ts: p.ts + dA, te: p.te + dA + opt.jA * 0.5 * gauss(r) };
+    }
+    if (sc.tEnd == null) sc.tEnd = st.t0;
+    return null;
+  }
+  function sense(st, tau) {
+    const sc = st.sc; if (!sc || sc.i >= plan.length) return tau; const L = plan[sc.i]; if (L.type !== 'free') return tau;
+    const d = Math.hypot(L.T[0] - st.ex, L.T[1] - st.ey), want = Math.atan2(L.T[1] - st.ey, L.T[0] - st.ex), have = st.h + tau / 2;
+    let g = L.gFar + (L.gNear - L.gFar) * Math.max(0, Math.min(1, 1 - (d - 1) / 5));
+    if (L.maxPulses != null && sc.free > L.maxPulses && !L.last) g = Math.min(1.2, g + 0.1 * (sc.free - L.maxPulses));   // overtime: come back
+    else if (sc.free < (L.minPulses || 0) && d < 3) g = 0;   // circling the zone: let it loop freely close in
+    return tau + g * wrap(want - have) * 2;
+  }
+  // how far along the plan a particle is, and how far it still has to go on its current free leg (for the draft scoring)
+  function progress(st) {
+    const sc = st.sc || { i: 0, done: 0 }, L = plan[Math.min(sc.i, plan.length - 1)];
+    const dist = sc.i < plan.length && L.type === 'free' ? Math.hypot(L.T[0] - st.ex, L.T[1] - st.ey) : 0;
+    return { legs: sc.i, pulses: sc.done, dist, approach: !!(L && L.approach), finished: sc.tEnd != null };
+  }
+  return { script, sense, progress };
+}
+
+module.exports.buildPlan = buildPlan; module.exports.makePlanScript = makePlanScript;
