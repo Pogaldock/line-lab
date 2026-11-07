@@ -374,7 +374,7 @@ var self=globalThis;var window=self;
     var sc = 1 / Math.max(1e-6, mxx - mnx, mxy - mny), cx = (mnx + mxx) / 2, cy = (mny + mxy) / 2;
     return P.map(function (p) { return [(p[0] - cx) * sc, (p[1] - cy) * sc, p[2], p[3]]; });
   }
-  var api = { MODES: MODES, create: create, step: step, finish: finish, normWin: normWin, trailing: trailing };
+  var api = { MODES: MODES, create: create, step: step, finish: finish, normWin: normWin, trailing: trailing, pulse: pulse, integrate: integrate, MODE_NAMES: MODE_NAMES };   /* pulse/integrate: for writing (choosing among the walk's own pulses) */
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.Steer = api;
 })(this);
 
