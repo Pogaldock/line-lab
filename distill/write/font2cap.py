@@ -85,7 +85,8 @@ def shortest(c, s, t):
     while u != s: u, k = prev[u]; path.append(k)
     return dist[t], path
 
-LOOP = 0.045 * HGT     # loop width for re-traced stems
+import os
+LOOP = float(os.environ.get('LOOPF', '0.045')) * (SIZE if os.environ.get('RAW') else HGT)     # loop width for re-traced stems (LOOPF: fraction; loopier letters for the walk)
 strokes = []
 for c, *_ in info:
     d = degrees([edges[k] for k in c])
@@ -154,13 +155,16 @@ def smooth(P, w=6):
     if n < 3: return P
     Q = np.array([P[max(0, i - w):i + w + 1].mean(axis=0) for i in range(n)]); Q[0], Q[-1] = P[0], P[-1]; return Q
 y0 = xh.min()
-cap = {'key': word, 'cat': 'font', 'font': font_path.split('/')[-1], 'strokes': []}
+RAW = bool(os.environ.get('RAW')); asc, desc = ft.getmetrics(); OX, BASE = 40 - bb[0], 40 - bb[1] + asc
+cap = {'key': word, 'cat': 'font', 'font': font_path.split('/')[-1], 'strokes': [], 'adv': round(ft.getlength(word) / SIZE, 4), 'units': 'font' if RAW else 'height'}
 t = 0
 for P in strokes:
     Q = smooth(P)[::3]
     flat = []
     for x, y in Q:
-        flat += [round(x / HGT, 4), round((y - y0) / HGT, 4), 0.5, t]; t += 8
+        if RAW: flat += [round((x - OX) / SIZE, 4), round((y - BASE) / SIZE, 4), 0.5, t]   # font units: origin on the baseline at the pen start, 1 = font size
+        else: flat += [round(x / HGT, 4), round((y - y0) / HGT, 4), 0.5, t]
+        t += 8
     t += 120
     cap['strokes'].append(flat)
 json.dump(cap, open(out, 'w'))
