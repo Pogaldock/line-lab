@@ -1,0 +1,12 @@
+<!doctype html><canvas id="c" width="1500" height="560"></canvas><script src="/home/claude/taste-data/code/endless/ribbon.js"></script>
+<script>
+const c = document.getElementById('c'), cx = c.getContext('2d');
+window.draw = (runs) => { cx.fillStyle = '#0e0f12'; cx.fillRect(0, 0, 1500, 560); const W = 500;
+  runs.forEach((r, k) => { const ox = k * W, all = r.guide.concat(r.line.map(p => [p[0], p[1]])), xs = all.map(p => p[0]), ys = all.map(p => p[1]);
+    const mx = (Math.max(...xs) + Math.min(...xs)) / 2, my = (Math.max(...ys) + Math.min(...ys)) / 2, s = Math.min((W - 40) / (Math.max(...xs) - Math.min(...xs)), 440 / (Math.max(...ys) - Math.min(...ys)));
+    const T = (p) => [ox + W / 2 + (p[0] - mx) * s, 280 + (p[1] - my) * s];
+    cx.strokeStyle = 'rgba(120,180,255,0.55)'; cx.lineWidth = 2; cx.beginPath(); r.guide.forEach((p, i) => { const q = T(p); if (i && !p[2]) cx.lineTo(q[0], q[1]); else cx.moveTo(q[0], q[1]); }); cx.stroke();
+    drawRibbon(cx, r.line.map(p => { const q = T(p); return [q[0], q[1], Math.pow(p[2], 2) * 1.9, p[3]]; }), { width: 7, smooth: 2.5, fade: () => '#f0eade' });
+    cx.fillStyle = '#8a8d95'; cx.font = '18px monospace'; cx.fillText('pull ' + r.g, ox + 16, 30); });
+  return c.toDataURL('image/png'); };
+</script>
