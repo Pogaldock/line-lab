@@ -5,3 +5,5 @@ distill/judges.onnx
 distill/write/m*.png
 distill/write/m_*.json
 distill/write/s_*.json
+distill/write/v_*.json
+distill/write/ranked.json
