@@ -1,0 +1,23 @@
+<!doctype html><style>@font-face{font-family:K;src:url(Knewave-Regular.ttf)}</style><canvas id="c"></canvas>
+<script>
+// The walk untouched; the word only changes the ink: inside the letters the line gets thicker and pink, outside it stays thin and pale.
+window.draw = async (P, word, panels, theme) => {
+  await document.fonts.load('200px K');
+  const W = 1400, H = 560, c = document.getElementById('c'); c.width = W; c.height = H * panels.length; const cx = c.getContext('2d');
+  const xs = P.map(p => p[0]), ys = P.map(p => p[1]), mnx = Math.min(...xs), mxx = Math.max(...xs), mny = Math.min(...ys), mxy = Math.max(...ys);
+  const s = Math.min((W - 60) / (mxx - mnx), (H - 60) / (mxy - mny)), ox = (W - (mxx - mnx) * s) / 2, oy = (H - (mxy - mny) * s) / 2;
+  // word mask, softened at the edges
+  const m = document.createElement('canvas'); m.width = W; m.height = H; const mx = m.getContext('2d');
+  let fs = 400; mx.font = fs + 'px K'; const tw = mx.measureText(word).width; fs = fs * Math.min((W * (window.WFR || 0.8)) / tw, 1.25); mx.font = fs + 'px K';
+  mx.filter = 'blur(5px)'; mx.fillStyle = '#000'; mx.textAlign = 'center'; mx.textBaseline = 'middle'; mx.fillText(word, W / 2, H / 2 + fs * 0.06);
+  const md = mx.getImageData(0, 0, W, H).data, mask = (x, y) => { x = Math.round(x); y = Math.round(y); if (x < 0 || y < 0 || x >= W || y >= H) return 0; return md[(y * W + x) * 4 + 3] / 255; };
+  const bg = theme === 'paper' ? '#efe8dc' : '#0e0f12', thin = theme === 'paper' ? [20, 20, 22, 0.16] : [240, 234, 222, 0.12], pink = [255, 79, 163, 1];
+  panels.forEach(([secs, label], k) => {
+    const y0 = k * H; cx.fillStyle = bg; cx.fillRect(0, y0, W, H);
+    const Q = P.filter(p => p[3] <= secs * 1000).map(p => [ox + (p[0] - mnx) * s, y0 + oy + (p[1] - mny) * s, p[2]]);
+    cx.lineCap = 'round';
+    for (let i = 1; i < Q.length; i++) { const a = Q[i - 1], b = Q[i], t = mask((a[0] + b[0]) / 2, (a[1] + b[1]) / 2 - y0), e = t * t * (3 - 2 * t), pr = 0.6 + 0.8 * b[2];
+      const col = thin.map((v, j) => v + (pink[j] - v) * e); cx.strokeStyle = `rgba(${col[0] | 0},${col[1] | 0},${col[2] | 0},${col[3]})`; cx.lineWidth = (0.8 + 3.2 * e) * pr; cx.beginPath(); cx.moveTo(a[0], a[1]); cx.lineTo(b[0], b[1]); cx.stroke(); }
+    cx.fillStyle = theme === 'paper' ? '#6a6a6a' : '#8a8d95'; cx.font = '20px monospace'; cx.fillText(label, 20, y0 + 32); });
+  return c.toDataURL('image/png'); };
+</script>

@@ -293,7 +293,7 @@ var self=globalThis;var window=self;
       var p = fresh[a], cnt = 0, dmin = Infinity;
       for (var b = 0; b < old.length; b++) { var d = Math.hypot(p[0] - old[b][0], p[1] - old[b][1]); if (d < rr) cnt++; if (d < dmin) dmin = d; }
       dens += Math.min(1, cnt / 5); gapS += Math.min(1, (dmin === Infinity ? 0.25 * R : dmin) / (0.25 * R)); n++;
-      var rad = Math.hypot(p[0], p[1]) / R; if (rad > 1) out += (rad - 1) * (rad - 1);
+      var rad = Math.hypot(p[0] / (o.arenaAspect || 1), p[1]) / R;   /* arenaAspect: a wider page (Nov 7, words in the walk) */ if (rad > 1) out += (rad - 1) * (rad - 1);
     }
     /* recrossings: the new stretch cutting through older line */
     var cross = 0, oldSeg = []; for (var k = 0; k < pts.length - 2; k += 2) if (pts[k + 2][3] < T - 500) oldSeg.push([pts[k], pts[k + 2]]);
