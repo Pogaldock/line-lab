@@ -1,7 +1,7 @@
 <!doctype html><canvas id="c" width="1400" height="1500"></canvas><script src="/home/claude/taste-data/code/endless/ribbon.js"></script>
 <script>
 const c = document.getElementById('c'), cx = c.getContext('2d');
-window.draw = (orig, runs) => { cx.fillStyle = '#0e0f12'; cx.fillRect(0, 0, 1400, 1500); const H = 375;
+window.draw = (orig, runs) => { cx.fillStyle = '#0e0f12'; cx.fillRect(0, 0, c.width, c.height); const H = 375;
   const panel = (pts, isGuide, k, label, extra) => { const oy = k * H, xs = pts.map(p => p[0]), ys = pts.map(p => p[1]);
     const mx = (Math.max(...xs) + Math.min(...xs)) / 2, my = (Math.max(...ys) + Math.min(...ys)) / 2, s = Math.min(1300 / (Math.max(...xs) - Math.min(...xs)), 300 / (Math.max(...ys) - Math.min(...ys)));
     const T = (p) => [700 + (p[0] - mx) * s, oy + H / 2 + 10 + (p[1] - my) * s];
@@ -10,6 +10,6 @@ window.draw = (orig, runs) => { cx.fillStyle = '#0e0f12'; cx.fillRect(0, 0, 1400
       drawRibbon(cx, pts.map(p => { const q = T(p); return [q[0], q[1], Math.pow(p[2], 2) * 1.9, p[3]]; }), { width: 4.2, smooth: 2.5, fade: () => '#f0eade' }); }
     cx.fillStyle = '#8a8d95'; cx.font = '22px monospace'; cx.fillText(label, 24, oy + 36); };
   panel(orig, true, 0, 'your handwriting');
-  runs.forEach((r, k) => panel(r.line, false, k + 1, 'pen, pull ' + r.g, null));
+  runs.forEach((r, k) => panel(r.line, false, k + 1, r.label || ('pen, pull ' + r.g), null));
   return c.toDataURL('image/png'); };
 </script>

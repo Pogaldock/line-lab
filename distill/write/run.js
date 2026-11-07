@@ -4,7 +4,7 @@ const D = __dirname + '/../'; const fs = require('fs'), W = require(D + 'walkmod
 const [cap, g, seed, out] = [JSON.parse(fs.readFileSync(process.argv[2])), +process.argv[3], +process.argv[4], process.argv[5]];
 const SJ = JSON.parse(fs.readFileSync(D + 'live/results/student_weights_b1.json')), F = ST.make(SJ);
 const top = JSON.parse(fs.readFileSync(D + 'night_results/final.json')).settings.filter(s => s.group === 'new').sort((a, b) => b.min_AB - a.min_AB);
-const guide = guideFrom(cap, +(process.argv[7] || 14)), E = L.create(W, R, top[+(process.argv[6] || 0)].g, seed, { lambda: 2 });
+const guide = guideFrom(cap, +(process.argv[7] || 14), +(process.argv[8] || 1)), E = L.create(W, R, top[+(process.argv[6] || 0)].g, seed, { lambda: 2 });
 E.parts[0].o.arena = 1e4; E.parts[0].o.sense = makeSense(guide, g, 1.5);
 (async () => {
   const score = async (wins) => wins.map((w, i) => { const o = F(R.raster(w, SJ.size)), st = E.parts[i].st, bonus = 0.15 * (st.gc || 0) * 0.05 - 0.8 * (st.gdev || 0); return [o[1] + bonus, o[2] + bonus]; });
