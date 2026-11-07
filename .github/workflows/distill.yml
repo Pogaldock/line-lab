@@ -2,7 +2,7 @@ name: judge models
 on:
   workflow_dispatch:
     inputs:
-      stage: { description: 'bestof (best-only validation, needs live/results/student_weights_b1.json) | live (student judge for the live line; batch=b1 full, other = smoke test) | bench | bench1 | gen | train | student | onnx | batch | alldata | long | combine | lcurve | qd | qds (search scored on steered lines) | qdb (continue qd from run_id) | bc | judges | night | nlong', required: true, default: 'bench' }
+      stage: { description: 'alphabet (found alphabet: hours of plain walk mined for natural letters) | bestof (best-only validation, needs live/results/student_weights_b1.json) | live (student judge for the live line; batch=b1 full, other = smoke test) | bench | bench1 | gen | train | student | onnx | batch | alldata | long | combine | lcurve | qd | qds (search scored on steered lines) | qdb (continue qd from run_id) | bc | judges | night | nlong', required: true, default: 'bench' }
       teacher: { description: 'model key from bench.json', required: false, default: 'dinov2_vits14' }
       batch: { description: 'batch id (batch stage)', required: false, default: 'b1' }
       arms: { description: 'ab (dino/walk), explore, r2 or r3', required: false, default: 'ab' }
@@ -690,3 +690,37 @@ jobs:
       - run: |
           git config user.name "taste-bot"; git config user.email "taste-bot@users.noreply.github.com"
           git add -f distill/live/results/bestof.json && git commit -m "best-only validation" && for i in 1 2 3 4 5; do git pull --rebase && git push && break; sleep 7; done
+  a_gen:
+    if: inputs.stage == 'alphabet'
+    runs-on: ubuntu-latest
+    strategy:
+      matrix: { part: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19] }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '22' }
+      - working-directory: distill/write
+        run: |
+          mkdir -p nat
+          for k in 0 1 2 3; do ( for i in $(seq 0 19); do node natural.js $(( 1000 + ${{ matrix.part }} * 100 + k * 20 + i )) 60 nat/n_${k}_$i.json; done ) & done; wait
+          ls nat | wc -l
+          L=(abcdefg hijklm nopqrs tuvwxyz)
+          for k in 0 1 2 3; do TAG=p${{ matrix.part }}_ node found_alphabet.js nat abc fa_$k.json ${L[$k]} 8 2>/dev/null & done; wait
+          node found_alphabet.js merge found_${{ matrix.part }}.json 8 fa_0.json fa_1.json fa_2.json fa_3.json
+      - uses: actions/upload-artifact@v4
+        with: { name: 'found-${{ matrix.part }}', path: 'distill/write/found_${{ matrix.part }}.json' }
+  a_merge:
+    if: always() && inputs.stage == 'alphabet'
+    needs: a_gen
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '22' }
+      - uses: actions/download-artifact@v4
+        with: { path: distill/write/fparts, pattern: 'found-*', merge-multiple: true }
+      - working-directory: distill/write
+        run: node found_alphabet.js merge found_alphabet.json 8 fparts/*.json
+      - run: |
+          git config user.name "taste-bot"; git config user.email "taste-bot@users.noreply.github.com"
+          git add -f distill/write/found_alphabet.json && git commit -m "found alphabet" && for i in 1 2 3 4 5; do git pull --rebase && git push && break; sleep 7; done
