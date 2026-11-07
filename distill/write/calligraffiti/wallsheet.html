@@ -1,0 +1,16 @@
+<!doctype html><canvas id="c"></canvas>
+<script>
+// a wall: the whole line with one broad nib, each tag in its own ink (pink or base), drawn in order so later tags sit on top
+window.draw = (wall, opt) => {
+  const W = 1600, H = 1000, c = document.getElementById('c'); c.width = W; c.height = H; const cx = c.getContext('2d');
+  const paper = opt.theme === 'paper', bg = paper ? '#ece4d6' : '#0e0f12', base = paper ? '#151517' : '#f0eade', pink = '#ff4fa3';
+  cx.fillStyle = bg; cx.fillRect(0, 0, W, H);
+  const t0 = wall.log.length ? wall.log[0][1] - 900 : 0, P = wall.line.filter(p => p[3] >= t0), xs = P.map(p => p[0]), ys = P.map(p => p[1]);
+  const s = Math.min((W - 80) / (Math.max(...xs) - Math.min(...xs)), (H - 80) / (Math.max(...ys) - Math.min(...ys))), ox = (W - (Math.max(...xs) - Math.min(...xs)) * s) / 2 - Math.min(...xs) * s, oy = (H - (Math.max(...ys) - Math.min(...ys)) * s) / 2 - Math.min(...ys) * s;
+  const log = wall.log, tagAt = (t) => { let k = -1; for (let i = 0; i < log.length; i++) if (log[i][1] <= t) k = log[i][0]; return k; };
+  const ang = -0.75, nib = 0.55 * s, hx = Math.cos(ang) / 2, hy = Math.sin(ang) / 2;
+  for (let i = 1; i < P.length; i++) { const k = tagAt(P[i][3]), col = k >= 0 && wall.tags[k] && wall.tags[k].pink ? pink : base;
+    const a = [ox + P[i - 1][0] * s, oy + P[i - 1][1] * s], b = [ox + P[i][0] * s, oy + P[i][1] * s], w = nib * (0.02 + 1.2 * Math.min(1, P[i][2] / 0.65));
+    cx.fillStyle = col; cx.strokeStyle = col; cx.lineWidth = 1; cx.beginPath(); cx.moveTo(a[0] + hx * w, a[1] + hy * w); cx.lineTo(b[0] + hx * w, b[1] + hy * w); cx.lineTo(b[0] - hx * w, b[1] - hy * w); cx.lineTo(a[0] - hx * w, a[1] - hy * w); cx.closePath(); cx.fill(); cx.stroke(); }
+  return c.toDataURL('image/png'); };
+</script>

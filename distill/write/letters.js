@@ -142,6 +142,7 @@ function makePlanScript(plan, opt) {
         if (!(L.last && over) && ((dT > L.arrive && dS > L.arrive) || sc.free < L.minPulses)) { sc.free++; st.dScale = L.approach ? 1 : (opt.zoneScale || 1); st.pwScale = L.air ? 0.04 : 1; return null; }   // the walk's own pulse (bigger inside zones)
         sc.i++; sc.free = 0; if (L.last) sc.tEnd = st.t0; continue;
       }
+      if (sc.k === 0 && L.tag != null) (sc.log = sc.log || []).push([L.tag, st.t0]);   // when each tag starts (for colouring layers)
       st.dScale = 1; st.pwScale = 1; const p = L.pulses[sc.k]; sc.k++; sc.done++;
       if (sc.k >= L.pulses.length) { sc.i++; sc.k = 0; }
       const dA = opt.jA * gauss(r);
