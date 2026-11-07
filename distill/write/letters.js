@@ -139,13 +139,13 @@ function makePlanScript(plan, opt) {
       if (L.type === 'free') {
         const dT = Math.hypot(L.T[0] - st.ex, L.T[1] - st.ey), dS = L.S ? Math.hypot(L.S[0] - st.ex, L.S[1] - st.ey) : 1e9;
         const over = sc.free >= (L.maxPulses == null ? 1e9 : L.maxPulses);
-        if (!(L.last && over) && ((dT > L.arrive && dS > L.arrive) || sc.free < L.minPulses)) { sc.free++; st.dScale = L.approach ? 1 : (opt.zoneScale || 1); return null; }   // the walk's own pulse (bigger inside zones)
+        if (!(L.last && over) && ((dT > L.arrive && dS > L.arrive) || sc.free < L.minPulses)) { sc.free++; st.dScale = L.approach ? 1 : (opt.zoneScale || 1); st.pwScale = L.air ? 0.04 : 1; return null; }   // the walk's own pulse (bigger inside zones)
         sc.i++; sc.free = 0; if (L.last) sc.tEnd = st.t0; continue;
       }
-      st.dScale = 1; const p = L.pulses[sc.k]; sc.k++; sc.done++;
+      st.dScale = 1; st.pwScale = 1; const p = L.pulses[sc.k]; sc.k++; sc.done++;
       if (sc.k >= L.pulses.length) { sc.i++; sc.k = 0; }
       const dA = opt.jA * gauss(r);
-      return { D: p.D * Math.exp(opt.jD * gauss(r)), ts: p.ts + dA, te: p.te + dA + opt.jA * 0.5 * gauss(r) };
+      return { D: p.D * Math.exp(opt.jD * gauss(r)), ts: p.ts + dA, te: p.te + dA + opt.jA * 0.5 * gauss(r), pause: p.pause };
     }
     if (sc.tEnd == null) sc.tEnd = st.t0;
     return null;

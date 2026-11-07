@@ -6,7 +6,7 @@
 // 'adv' is how far the next letter starts. Dots (i, j) are separate quick flicks drawn after the word.
 (function (root) {
   const L = {
-    a: { adv: 0.62, p: [[0, 0, 's'], [0.42, -0.95, 'c'], [0.12, -0.9, 's'], [0.02, -0.4, 's'], [0.18, -0.02, 's'], [0.44, -0.6, 's'], [0.46, -1, 'c'], [0.42, 0, 's'], [0.62, -0.28, 's']] },
+    a: { adv: 0.7, p: [[0, 0, 's'], [0.48, -0.95, 'c'], [0.16, -0.92, 's'], [0.02, -0.4, 's'], [0.2, -0.02, 's'], [0.5, -0.6, 's'], [0.52, -1, 'c'], [0.48, 0, 's'], [0.7, -0.28, 's']] },
     b: { adv: 0.62, p: [[0, 0, 's'], [0.38, -1.6, 's'], [0.34, -2.4, 'c'], [0.12, 0, 's'], [0.3, -0.85, 's'], [0.52, -0.6, 's'], [0.3, -0.02, 's'], [0.1, -0.15, 'c'], [0.62, -0.75, 's']] },
     c: { adv: 0.55, p: [[0, 0, 's'], [0.42, -0.9, 's'], [0.3, -1, 's'], [0.05, -0.55, 's'], [0.15, -0.02, 's'], [0.55, -0.3, 's']] },
     d: { adv: 0.62, p: [[0, 0, 's'], [0.42, -0.95, 'c'], [0.12, -0.9, 's'], [0.02, -0.4, 's'], [0.18, -0.02, 's'], [0.44, -0.7, 's'], [0.56, -2.4, 'c'], [0.42, 0, 's'], [0.62, -0.28, 's']] },
@@ -18,15 +18,15 @@
     j: { adv: 0.42, dot: [0.24, -1.5], p: [[0, 0, 's'], [0.2, -1, 'c'], [0.14, 1.4, 'c'], [0.0, 0.6, 's'], [0.42, -0.25, 's']] },
     k: { adv: 0.62, p: [[0, 0, 's'], [0.38, -1.6, 's'], [0.34, -2.4, 'c'], [0.1, 0, 'c'], [0.45, -1, 's'], [0.2, -0.5, 'c'], [0.45, -0.05, 's'], [0.62, -0.28, 's']] },
     l: { adv: 0.42, p: [[0, 0, 's'], [0.38, -1.6, 's'], [0.36, -2.4, 'c'], [0.14, -0.1, 's'], [0.42, -0.3, 's']] },
-    m: { adv: 0.88, p: [[0, 0, 's'], [0.12, -1, 'c'], [0.08, 0, 'c'], [0.32, -1, 's'], [0.38, 0, 'c'], [0.6, -1, 's'], [0.66, -0.1, 's'], [0.88, -0.28, 's']] },
-    n: { adv: 0.62, p: [[0, 0, 's'], [0.12, -1, 'c'], [0.08, 0, 'c'], [0.34, -1, 's'], [0.42, -0.1, 's'], [0.62, -0.28, 's']] },
+    m: { adv: 1.05, p: [[0, 0, 's'], [0.12, -1, 'c'], [0.08, 0, 'c'], [0.28, -0.9, 's'], [0.4, -1.02, 's'], [0.44, -0.5, 's'], [0.42, 0, 'c'], [0.6, -0.9, 's'], [0.74, -1.02, 's'], [0.8, -0.5, 's'], [0.8, -0.08, 's'], [1.05, -0.28, 's']] },
+    n: { adv: 0.74, p: [[0, 0, 's'], [0.12, -1, 'c'], [0.08, 0, 'c'], [0.3, -0.9, 's'], [0.46, -1.02, 's'], [0.52, -0.5, 's'], [0.52, -0.08, 's'], [0.74, -0.28, 's']] },
     o: { adv: 0.55, p: [[0, 0, 's'], [0.38, -0.98, 's'], [0.1, -0.85, 's'], [0.04, -0.3, 's'], [0.25, -0.02, 's'], [0.42, -0.55, 's'], [0.36, -0.95, 'c'], [0.55, -0.85, 's']] },
     p: { adv: 0.62, p: [[0, 0, 's'], [0.16, -1, 'c'], [0.1, 1.4, 'c'], [0.16, -0.8, 's'], [0.5, -0.8, 's'], [0.4, -0.05, 's'], [0.14, -0.1, 's'], [0.62, -0.3, 's']] },
     q: { adv: 0.6, p: [[0, 0, 's'], [0.42, -0.95, 'c'], [0.12, -0.9, 's'], [0.02, -0.4, 's'], [0.18, -0.02, 's'], [0.44, -0.6, 's'], [0.46, -1, 'c'], [0.38, 1.4, 'c'], [0.6, 0.6, 's']] },
     r: { adv: 0.5, p: [[0, 0, 's'], [0.14, -1, 'c'], [0.12, 0, 'c'], [0.26, -0.8, 's'], [0.5, -0.9, 's']] },
     s: { adv: 0.5, p: [[0, 0, 's'], [0.3, -1.02, 'c'], [0.42, -0.4, 's'], [0.24, -0.02, 's'], [0.04, -0.14, 'c'], [0.5, -0.3, 's']] },
     t: { adv: 0.45, bar: [[0.02, -1.1], [0.42, -1.15]], p: [[0, 0, 's'], [0.3, -1.4, 's'], [0.3, -1.9, 'c'], [0.14, -0.1, 's'], [0.45, -0.3, 's']] },
-    u: { adv: 0.62, p: [[0, 0, 's'], [0.12, -1, 'c'], [0.1, -0.2, 's'], [0.24, -0.02, 's'], [0.42, -1, 'c'], [0.42, -0.1, 's'], [0.62, -0.28, 's']] },
+    u: { adv: 0.72, p: [[0, 0, 's'], [0.12, -1, 'c'], [0.1, -0.25, 's'], [0.28, -0.02, 's'], [0.5, -1, 'c'], [0.5, -0.1, 's'], [0.72, -0.28, 's']] },
     v: { adv: 0.55, p: [[0, 0, 's'], [0.12, -1, 'c'], [0.2, -0.05, 'c'], [0.42, -1, 's'], [0.38, -0.9, 'c'], [0.55, -0.85, 's']] },
     w: { adv: 0.8, p: [[0, 0, 's'], [0.12, -1, 'c'], [0.18, -0.05, 'c'], [0.38, -0.9, 'c'], [0.44, -0.05, 'c'], [0.66, -1, 's'], [0.6, -0.9, 'c'], [0.8, -0.85, 's']] },
     x: { adv: 0.55, bar: [[0.42, -1], [0.08, 0]], p: [[0, 0, 's'], [0.12, -1, 'c'], [0.22, -0.5, 's'], [0.38, -0.05, 's'], [0.55, -0.3, 's']] },
@@ -36,7 +36,7 @@
   // a word -> one continuous skeleton: letters laid end to end, each letter's first point shifted onto the previous exit
   // opt: { slant (radians, lean right), loops (true: turnarounds as tight loops, false: sharp corners), loopR }
   function word(text, opt) {
-    opt = Object.assign({ slant: 0.22, loops: true, loopR: 0.11, track: 0.16 }, opt || {});
+    opt = Object.assign({ slant: 0.22, loops: false, loopR: 0.11, track: 0.2 }, opt || {});   // Rowan's pick: sharp corners
     let x = 0, pts = [], extras = [];
     for (const ch of text.toLowerCase()) {
       if (ch === ' ') { x += 0.5; continue; }
@@ -50,11 +50,10 @@
     }
     const line = spline(pts, opt);
     const sl = (p) => [p[0] - p[1] * Math.tan(opt.slant), p[1]];   // lean right: higher points move right
-    return { line: line.map(sl), extras: extras.map(e => e.kind === 'dot' ? { kind: 'dot', at: sl(e.at) } : { kind: 'bar', a: sl(e.a), b: sl(e.b) }), width: x };
+    return { line: line.map(sl), runs: line.runs.map(R => R.map(sl)), extras: extras.map(e => e.kind === 'dot' ? { kind: 'dot', at: sl(e.at) } : { kind: 'bar', a: sl(e.a), b: sl(e.b) }), width: x };
   }
   // centripetal Catmull-Rom through the skeleton; turnarounds become tight loops or sharp corners
   function spline(P, opt) {
-    const runs = [[P[0]]];   // split at corners when loops are off
     const pts = [];
     for (let i = 0; i < P.length; i++) {
       const p = P[i];
@@ -70,9 +69,9 @@
     const out = []; let seg = [pts[0]];
     for (let i = 1; i < pts.length; i++) { seg.push(pts[i]); if (pts[i][2] === 'c' && !opt.loops) { out.push(seg); seg = [pts[i]]; } }
     out.push(seg);
-    const res = [];
-    out.forEach((S, k) => { const c = cr(S); if (k) c.shift(); res.push(...c); });
-    return res;
+    const res = [], runs = out.map(S => cr(S));   // runs: the stretches between sharp corners (the pen nearly stops at each corner)
+    runs.forEach((c, k) => res.push(...(k ? c.slice(1) : c)));
+    res.runs = runs; return res;
   }
   function cr(S) {
     if (S.length < 3) return S.map(p => [p[0], p[1]]);

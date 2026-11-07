@@ -235,6 +235,7 @@ var self=globalThis;var window=self;
     /* script (Nov 7, writing words): may hand the walk its next pulse (length D, direction from ts to te), e.g. a letter
        written in the walk's own pulses. Timing, overlap and pressure stay the walk's; returning nothing lets the walk run free. */
     if (o.script && st.ex != null) { var sp = o.script(st, r); if (sp) {
+      if (sp.pause) st.t0 += sp.pause;   /* a sharp corner: the pen nearly stops before setting off in the new direction */
       comps.push({ t0: st.t0, mu: mu, sg: sg, D: sp.D, ts: sp.ts, te: sp.te, pw: sp.pw == null ? 1 : sp.pw });
       st.ex += sp.D * Math.cos((sp.ts + sp.te) / 2); st.ey += sp.D * Math.sin((sp.ts + sp.te) / 2);
       st.h = sp.te; st.tau = Math.max(-1.6, Math.min(1.6, sp.te - sp.ts)); st.legLeft = 0; st.t0 += spacing * Math.sqrt(sp.D) * (0.85 + 0.3 * r()); return; } }
@@ -256,7 +257,7 @@ var self=globalThis;var window=self;
     st.lD = o.speedRho * st.lD + o.speedSigma * Math.sqrt(1 - o.speedRho * o.speedRho) * G.gauss(r);
     var D = Math.exp(st.lD) * mD * Math.max(0.55, Math.pow(1 + Math.abs(tauAll), -o.beta * 3)) * (st.dScale || 1);   /* dScale: draw the free walk bigger (same shape, larger scale) */
     var pwG = st.gap > 0 ? 0.35 + 0.65 * (1 - st.gap / Math.max(2, Math.round(o.jagLeg * 0.8))) : 1;
-    comps.push({ t0: st.t0, mu: mu, sg: sg, D: D, ts: st.h, te: st.h + tauAll, pw: pwG });
+    comps.push({ t0: st.t0, mu: mu, sg: sg, D: D, ts: st.h, te: st.h + tauAll, pw: pwG * (st.pwScale == null ? 1 : st.pwScale) });   /* pwScale: the pen nearly lifts (travel to an i dot) */
     if (st.ex != null) { st.ex += D * Math.cos(st.h + tauAll / 2); st.ey += D * Math.sin(st.h + tauAll / 2); st.turns = (st.turns || []).concat([tauAll]).slice(-12); }
     st.h += tauAll; st.t0 += spacing * Math.sqrt(D) * (0.85 + 0.3 * r());
   }
