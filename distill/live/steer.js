@@ -30,7 +30,7 @@
       const u0 = rng() / P, pick = []; let c = w[0] / sw, i = 0;
       for (let k = 0; k < P; k++) { const u = u0 + k / P; while (u > c && i < P - 1) { i++; c += w[i] / sw; } pick.push(i); }
       const old = parts.slice();
-      parts = pick.map(i2 => { const A = old[i2]; return { o: A.o, r: W.LineGen.mulberry(++sd), st: JSON.parse(JSON.stringify(A.st)), comps: A.comps.slice(), pts: A.pts, x: A.x, y: A.y, t: A.t, choices: [], lw: 0, prev: A.prev, hist: A.hist, id: nid++ }; });
+      parts = pick.map(i2 => { const A = old[i2]; return { o: A.o, r: W.LineGen.mulberry(++sd), st: JSON.parse(JSON.stringify(A.st)), comps: A.comps.slice(), pts: A.pts, x: A.x, y: A.y, t: A.t, choices: [], lw: 0, prev: A.prev, q: A.q, hist: A.hist, id: nid++ }; });
       return true;
     }
     // the whole line of the particle drawn by weight (for offline use), every 2nd point
@@ -50,16 +50,35 @@
     }
     // live use: every few checks, draw one survivor by weight, hand out its new points, and restart all particles from it
     let tCommit = -1;
-    function commit() {
+    function drawIndex() {
       const mx = Math.max(...parts.map(C => C.lw)), w = parts.map(C => Math.exp(C.lw - mx)), sw = w.reduce((a, b) => a + b, 0);
-      let u = rng() * sw, i = 0; for (; i < P - 1; i++) { u -= w[i]; if (u <= 0) break; }
-      const A = parts[i], chunks = []; for (let h = A.hist; h; h = h.prev) { chunks.unshift(h.pts); if (h.pts[0][3] <= tCommit) break; }
+      let u = rng() * sw, i = 0; for (; i < parts.length - 1; i++) { u -= w[i]; if (u <= 0) break; } return i;
+    }
+    function commit() { return commitFrom(parts[drawIndex()]); }
+    function commitFrom(A) {
+      const chunks = []; for (let h = A.hist; h; h = h.prev) { chunks.unshift(h.pts); if (h.pts[0][3] <= tCommit) break; }
       const out = [].concat(...chunks, A.pts).filter(p => p[3] > tCommit); tCommit = out.length ? out[out.length - 1][3] : tCommit;
       P = nextP; parts = Array.from({ length: P }, () => ({ o: A.o, r: W.LineGen.mulberry(++sd), st: JSON.parse(JSON.stringify(A.st)), comps: A.comps.slice(), pts: A.pts, x: A.x, y: A.y, t: A.t, choices: [], lw: 0, prev: A.prev, hist: null, id: nid++ }));
       return out;
     }
+    // ---- best only: redraw a segment from the same start up to K times, keep the attempt the judges like most ----
+    // scoreFn(windows) -> [[A, B], ...] (big-judge units). Steering uses min(A, B) as always; the segment's quality is the
+    // calibrated mean z-score of the two judges on the kept particle's last window (z >= 1.5 ~ your top 5%, ~85-89% rated good).
+    async function segment(scoreFn, o) {
+      o = o || {}; const checks = o.checks || 6, K = o.K || 1, thr = o.thr == null ? -Infinity : o.thr, cal = o.cal;
+      const zq = (ab) => cal ? ((ab[0] - cal.mA) / cal.sA + (ab[1] - cal.mB) / cal.sB) / 2 : Math.min(ab[0], ab[1]);
+      const snap = { parts: parts.map(C => Object.assign({}, C)), t1, tCommit }; let best = null, att = 0;
+      for (let a = 0; a < K; a++) {
+        if (a > 0) { parts = snap.parts.map(C => Object.assign({}, C, { r: W.LineGen.mulberry(++sd) })); t1 = snap.t1; tCommit = snap.tCommit; }
+        for (let k = 0; k < checks; k++) { const w = ask(), ab = await scoreFn(w); parts.forEach((C, i) => { C.q = zq(ab[i]); }); tell(ab.map(v => Math.min(v[0], v[1]))); }
+        att++; const i = drawIndex(), C = parts[i];
+        if (!best || C.q > best.q) best = { q: C.q, i, parts, t1 };
+        if (C.q >= thr) break;
+      }
+      parts = best.parts; t1 = best.t1; return { pts: commitFrom(parts[best.i]), q: best.q, attempts: att };
+    }
     function setP(n) { nextP = Math.max(2, Math.min(8, n)); }   // takes effect at the next commit, when all particles restart from one
-    return { ask, tell, final, committed, commit, setP, get P() { return P; }, get t() { return t1; }, get parts() { return parts; } };
+    return { ask, tell, final, committed, commit, segment, setP, get P() { return P; }, get t() { return t1; }, get parts() { return parts; } };
   }
   const api = { create };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.LiveSteer = api;

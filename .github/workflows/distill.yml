@@ -2,7 +2,7 @@ name: judge models
 on:
   workflow_dispatch:
     inputs:
-      stage: { description: 'live (student judge for the live line; batch=b1 full, other = smoke test) | bench | bench1 | gen | train | student | onnx | batch | alldata | long | combine | lcurve | qd | qds (search scored on steered lines) | qdb (continue qd from run_id) | bc | judges | night | nlong', required: true, default: 'bench' }
+      stage: { description: 'bestof (best-only validation, needs live/results/student_weights_b1.json) | live (student judge for the live line; batch=b1 full, other = smoke test) | bench | bench1 | gen | train | student | onnx | batch | alldata | long | combine | lcurve | qd | qds (search scored on steered lines) | qdb (continue qd from run_id) | bc | judges | night | nlong', required: true, default: 'bench' }
       teacher: { description: 'model key from bench.json', required: false, default: 'dinov2_vits14' }
       batch: { description: 'batch id (batch stage)', required: false, default: 'b1' }
       arms: { description: 'ab (dino/walk), explore, r2 or r3', required: false, default: 'ab' }
@@ -653,3 +653,40 @@ jobs:
       - run: |
           git config user.name "taste-bot"; git config user.email "taste-bot@users.noreply.github.com"
           git add -f distill/live/results && git commit -m "live student judge: training report and validation (${{ inputs.batch }})" && for i in 1 2 3 4 5; do git pull --rebase && git push && break; sleep 7; done
+  b_val:
+    if: inputs.stage == 'bestof'
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    strategy:
+      fail-fast: false
+      matrix: { part: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19] }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '22' }
+      - working-directory: distill
+        run: |
+          npm i -s --no-save onnxruntime-node@1.20.1
+          node -e "const fs=require('fs'),J=require('./onnx_night/judges.json');let b='';for(let k=0;k<J.parts;k++)b+=fs.readFileSync('onnx_night/judges_'+k+'.txt','utf8');fs.writeFileSync('judges.onnx',Buffer.from(b,'base64'))"
+          mkdir -p sdir && cp live/results/student_weights_b1.json sdir/student_weights.json
+          for k in 0 1 2 3; do node live/sbest.js $(( ${{ matrix.part }} * 4 + k )) 80 b_$k.json sdir 16 54 3 1.5 & done; wait
+          node -e "let a=[];for(const k of [0,1,2,3])a=a.concat(require('./b_'+k+'.json'));require('fs').writeFileSync('best_${{ matrix.part }}.json',JSON.stringify(a))"
+      - uses: actions/upload-artifact@v4
+        with: { name: 'best-${{ matrix.part }}', path: 'distill/best_${{ matrix.part }}.json' }
+  b_final:
+    if: always() && inputs.stage == 'bestof'
+    needs: b_val
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.11' }
+      - uses: actions/download-artifact@v4
+        with: { path: distill/bparts, pattern: 'best-*', merge-multiple: true }
+      - working-directory: distill
+        run: |
+          pip install --quiet numpy
+          mkdir -p live/results && python live/sbestsum.py bparts/*.json
+      - run: |
+          git config user.name "taste-bot"; git config user.email "taste-bot@users.noreply.github.com"
+          git add -f distill/live/results/bestof.json && git commit -m "best-only validation" && for i in 1 2 3 4 5; do git pull --rebase && git push && break; sleep 7; done

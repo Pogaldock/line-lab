@@ -1,0 +1,10 @@
+{
+ "note": "P(good) = 1/(1+exp(-(a*z+b))), z = mean of the two judges z-scores (A,B) using these means/sds from the 2,212 rated lines; fitted on held-out scores",
+ "a": 1.3703915249271397,
+ "b": -0.424490063509071,
+ "mA": -0.5286563391023388,
+ "sA": 1.5961484237579184,
+ "mB": -0.4695335745964718,
+ "sB": 1.771393218413797,
+ "max_observed": 0.9
+}
