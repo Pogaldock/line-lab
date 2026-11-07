@@ -12,8 +12,8 @@ function guideFrom(cap, height, spread) {
 }
 // The pull: before each pulse, find where the pen is along the word (nearest guide point a little behind to well ahead of the cursor),
 // move the cursor forward, aim at a point `lead` units ahead and bend the proposed turn towards it with strength g (air: g/3).
-function makeSense(guide, g, lead) {
-  const G = guide.G;
+function makeSense(guide, g, lead, adapt) {
+  const G = guide.G; adapt = adapt || 0;   // adapt > 0: pull stays at g near the letters and rises by up to `adapt` as the line drifts away (from 0.3 to 1.3 units off)
   return function (st, tau) {
     const x = st.ex, y = st.ey; let c = st.gc || 0, best = c, bd = 1e9;
     // the cursor can move at most 2.5 units along the word per pulse (no jumping to a later letter that loops nearby)
@@ -22,7 +22,7 @@ function makeSense(guide, g, lead) {
     if (c >= G.length - 2) return tau;
     const T = G[Math.min(G.length - 1, c + Math.round(lead / 0.05))], want = Math.atan2(T.y - y, T.x - x), have = st.h + tau / 2;
     let d = want - have; while (d > Math.PI) d -= 2 * Math.PI; while (d < -Math.PI) d += 2 * Math.PI;
-    const gg = G[c].air ? g / 3 : g; return tau + gg * d * 2;
+    const ga = g + adapt * Math.min(1, Math.max(0, (st.gdev - 0.3) / 1.0)), gg = G[c].air ? ga / 3 : ga; return tau + gg * d * 2;
   };
 }
 module.exports = { guideFrom, makeSense };
