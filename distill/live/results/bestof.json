@@ -1,0 +1,38 @@
+{
+ "n_lines": 160,
+ "plain": {
+  "predicted_good_pct": 56.4,
+  "se_pct": 2.0,
+  "share_windows_top5pct": 0.137,
+  "tries_per_segment": 1.0,
+  "n": 32
+ },
+ "teacher": {
+  "predicted_good_pct": 76.9,
+  "se_pct": 0.9,
+  "share_windows_top5pct": 0.436,
+  "tries_per_segment": 1.0,
+  "n": 32
+ },
+ "teacherBest": {
+  "predicted_good_pct": 80.7,
+  "se_pct": 0.9,
+  "share_windows_top5pct": 0.602,
+  "tries_per_segment": 1.67,
+  "n": 32
+ },
+ "student": {
+  "predicted_good_pct": 71.9,
+  "se_pct": 1.4,
+  "share_windows_top5pct": 0.305,
+  "tries_per_segment": 1.0,
+  "n": 32
+ },
+ "studentBest": {
+  "predicted_good_pct": 74.9,
+  "se_pct": 1.1,
+  "share_windows_top5pct": 0.434,
+  "tries_per_segment": 2.07,
+  "n": 32
+ }
+}
