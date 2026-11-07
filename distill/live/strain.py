@@ -47,6 +47,25 @@ for S, w, ep in [(64, 16, int(os.environ.get('EP', 8))), (96, 16, int(os.environ
     res['params'] = sum(p.numel() for p in m.parameters()); res['size'] = S; report[S] = res
     if best is None or res['pair_agree'] > report[best[0]]['pair_agree'] + 0.005: best = (S, m)
 S, m = best; m.eval(); wm = Wrap(m).eval(); os.makedirs('student', exist_ok=True)
-torch.onnx.export(wm, torch.zeros(8, 1, S, S), 'student/student.onnx', input_names=['ink'], output_names=['out'], dynamic_axes={'ink': {0: 'n'}, 'out': {0: 'n'}}, opset_version=17)
+torch.onnx.export(wm, torch.zeros(8, 1, S, S), 'student/student.onnx', input_names=['ink'], output_names=['out'], dynamic_axes={'ink': {0: 'n'}, 'out': {0: 'n'}}, opset_version=17, dynamo=False)
 json.dump({'chosen_size': S, 'report': report, 'outputs': ['full', 'A', 'B']}, open('student/student.json', 'w'), indent=1)
 print('chosen', S, report[S])
+# plain weights for the browser (batch norm folded into the convolutions) + test vectors to prove the JS forward pass matches
+def fold(seq):
+    L, mods = [], list(seq); i = 0
+    while i < len(mods):
+        md = mods[i]
+        if isinstance(md, nn.Conv2d):
+            w, b = md.weight.detach().numpy(), (md.bias.detach().numpy() if md.bias is not None else np.zeros(md.out_channels, np.float32))
+            bn = mods[i + 1]; g = bn.weight.detach().numpy() / np.sqrt(bn.running_var.numpy() + bn.eps)
+            L.append({'t': 'conv', 'cin': md.in_channels, 'cout': md.out_channels, 'k': 3, 's': md.stride[0], 'p': md.padding[0], 'w': (w * g[:, None, None, None]).ravel().round(6).tolist(), 'b': ((b - bn.running_mean.numpy()) * g + bn.bias.detach().numpy()).round(6).tolist()}); i += 2
+        elif isinstance(md, nn.ReLU): L.append({'t': 'relu'}); i += 1
+        elif isinstance(md, nn.AdaptiveAvgPool2d): L.append({'t': 'gap'}); i += 1
+        elif isinstance(md, nn.Flatten): i += 1
+        elif isinstance(md, nn.Linear): L.append({'t': 'fc', 'cin': md.in_features, 'cout': md.out_features, 'w': md.weight.detach().numpy().ravel().round(6).tolist(), 'b': md.bias.detach().numpy().round(6).tolist()}); i += 1
+        else: raise ValueError(md)
+    return L
+Xs = load(S); ti = np.flatnonzero(te)[:6]
+with torch.no_grad(): tout = wm(torch.from_numpy(Xs[ti]).float().unsqueeze(1) / 255).numpy()
+json.dump({'size': S, 'mu': mu.tolist(), 'sd': sd.tolist(), 'layers': fold(m), 'test': [{'ink': (Xs[i].astype(np.float32) / 255).ravel().round(4).tolist(), 'out': o.tolist()} for i, o in zip(ti, tout)]}, open('student/student_weights.json', 'w'))
+print('weights json', os.path.getsize('student/student_weights.json'))

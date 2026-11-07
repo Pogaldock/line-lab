@@ -649,7 +649,7 @@ jobs:
         run: |
           pip install --quiet numpy
           python live/ssum.py valparts/*.json || echo "no validation"
-          mkdir -p live/results && cp student/student.json live/results/student_${{ inputs.batch }}.json && cp student/student.onnx live/results/student_${{ inputs.batch }}.onnx && cp live/results/val.json live/results/val_${{ inputs.batch }}.json || true
+          mkdir -p live/results && cp student/student_weights.json live/results/student_weights_${{ inputs.batch }}.json; cp student/student.json live/results/student_${{ inputs.batch }}.json && cp student/student.onnx live/results/student_${{ inputs.batch }}.onnx && cp live/results/val.json live/results/val_${{ inputs.batch }}.json || true
       - run: |
           git config user.name "taste-bot"; git config user.email "taste-bot@users.noreply.github.com"
           git add -f distill/live/results && git commit -m "live student judge: training report and validation (${{ inputs.batch }})" && for i in 1 2 3 4 5; do git pull --rebase && git push && break; sleep 7; done

@@ -4,7 +4,7 @@
    points older than the oldest point any particle still has live are identical for every survivor, so they are final. */
 (function (root) {
   function create(W, R, g, seed, opt) {
-    opt = opt || {}; const P = opt.P || 8, H = opt.H || 1.5, lambda = opt.lambda == null ? 2 : opt.lambda;
+    opt = opt || {}; let P = opt.P || 8, nextP = P; const H = opt.H || 1.5, lambda = opt.lambda == null ? 2 : opt.lambda;
     const base = Object.assign({}, W.C.walk, { seed, modes: true, K: 6, modeBias: {} });
     for (const k in g) { if (typeof g[k] !== 'number') continue; if (k.startsWith('m_')) base.modeBias[k.slice(2)] = g[k]; else base[k] = g[k]; }
     base.mu = g.absMu; base.gPeriod = Math.round(g.gPeriod); base.jagLeg = Math.round(g.jagLeg);
@@ -55,10 +55,11 @@
       let u = rng() * sw, i = 0; for (; i < P - 1; i++) { u -= w[i]; if (u <= 0) break; }
       const A = parts[i], chunks = []; for (let h = A.hist; h; h = h.prev) { chunks.unshift(h.pts); if (h.pts[0][3] <= tCommit) break; }
       const out = [].concat(...chunks, A.pts).filter(p => p[3] > tCommit); tCommit = out.length ? out[out.length - 1][3] : tCommit;
-      parts = parts.map(() => ({ o: A.o, r: W.LineGen.mulberry(++sd), st: JSON.parse(JSON.stringify(A.st)), comps: A.comps.slice(), pts: A.pts, x: A.x, y: A.y, t: A.t, choices: [], lw: 0, prev: A.prev, hist: null, id: nid++ }));
+      P = nextP; parts = Array.from({ length: P }, () => ({ o: A.o, r: W.LineGen.mulberry(++sd), st: JSON.parse(JSON.stringify(A.st)), comps: A.comps.slice(), pts: A.pts, x: A.x, y: A.y, t: A.t, choices: [], lw: 0, prev: A.prev, hist: null, id: nid++ }));
       return out;
     }
-    return { ask, tell, final, committed, commit, get t() { return t1; }, get parts() { return parts; } };
+    function setP(n) { nextP = Math.max(2, Math.min(8, n)); }   // takes effect at the next commit, when all particles restart from one
+    return { ask, tell, final, committed, commit, setP, get P() { return P; }, get t() { return t1; }, get parts() { return parts; } };
   }
   const api = { create };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.LiveSteer = api;
