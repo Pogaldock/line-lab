@@ -2,7 +2,7 @@ name: judge models
 on:
   workflow_dispatch:
     inputs:
-      stage: { description: 'bench | bench1 | gen | train | student | onnx | batch | alldata | long | combine | lcurve | qd | qds (search scored on steered lines) | qdb (continue qd from run_id) | bc | judges | night', required: true, default: 'bench' }
+      stage: { description: 'bench | bench1 | gen | train | student | onnx | batch | alldata | long | combine | lcurve | qd | qds (search scored on steered lines) | qdb (continue qd from run_id) | bc | judges | night | nlong', required: true, default: 'bench' }
       teacher: { description: 'model key from bench.json', required: false, default: 'dinov2_vits14' }
       batch: { description: 'batch id (batch stage)', required: false, default: 'b1' }
       arms: { description: 'ab (dino/walk), explore, r2 or r3', required: false, default: 'ab' }
@@ -510,6 +510,39 @@ jobs:
       - run: |
           git config user.name "taste-bot"; git config user.email "taste-bot@users.noreply.github.com"
           git add distill/night_results && git commit -m "overnight results: pressure sweep, CMA-MAE search, fresh-seed rescoring" && for i in 1 2 3 4 5; do git pull --rebase && git push && break; sleep 7; done
+  nlong:
+    if: inputs.stage == 'nlong'
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix: { job: [0,1,2,3,4,5,6,7] }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '22' }
+      - working-directory: distill
+        run: |
+          npm i -s --no-save onnxruntime-node@1.20.1
+          node -e "const fs=require('fs'),J=require('./onnx_night/judges.json');let b='';for(let k=0;k<J.parts;k++)b+=fs.readFileSync('onnx_night/judges_'+k+'.txt','utf8');fs.writeFileSync('judges.onnx',Buffer.from(b,'base64'))"
+          for k in 0 1 2 3; do node night.js long $(( ${{ matrix.job }} * 4 + k )) 32 l_$k.json 2 180 & done; wait
+          node -e "let a=[];for(const k of [0,1,2,3])a=a.concat(require('./l_'+k+'.json'));require('fs').writeFileSync('long_${{ matrix.job }}.json',JSON.stringify(a))"
+      - uses: actions/upload-artifact@v4
+        with: { name: 'long-${{ matrix.job }}', path: 'distill/long_${{ matrix.job }}.json' }
+  nlong_collect:
+    if: always() && inputs.stage == 'nlong'
+    needs: nlong
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '22' }
+      - uses: actions/download-artifact@v4
+        with: { path: distill/lp, pattern: 'long-*', merge-multiple: true }
+      - run: |
+          cd distill && node -e "const fs=require('fs');let a=[];for(const f of fs.readdirSync('lp'))a=a.concat(JSON.parse(fs.readFileSync('lp/'+f)));a.sort((x,y)=>x.rank-y.rank);fs.writeFileSync('night_results/long.json',JSON.stringify(a));console.log('stretches',a.length)"
+          cd .. && git config user.name "taste-bot" && git config user.email "taste-bot@users.noreply.github.com"
+          git add distill/night_results/long.json && git commit -m "30 steered 3-minute stretches from the top overnight settings" && for i in 1 2 3 4 5; do git pull --rebase && git push && break; sleep 7; done
   longgen:
     if: inputs.stage == 'long'
     runs-on: ubuntu-latest

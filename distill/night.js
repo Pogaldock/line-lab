@@ -99,11 +99,50 @@ async function rescore(file, part, parts, out, lambda) {
     res.push({ id: c.id, g, x: encode(g), island: c.island, search_obj: c.obj, outs: rs.map(r => r.out), forms: rs.map(r => r.form), q: rs.slice(0, 2).map(r => pack(r.win)) }); }
   fs.writeFileSync(out, JSON.stringify(res)); console.log('rescored', res.length);
 }
-module.exports = { smc, load, judge, clean, decode, encode, KEYS };
+
+// A long steered line (minutes), same SMC as above. Each particle keeps only its last 12 s live; older points move into a shared,
+// never-copied history chain, so a resampled copy carries its ancestor's past for free.
+async function longLine(g, seed, secs, lambda, P) {
+  P = P || P_DEFAULT; const rng = W.LineGen.mulberry(seed * 7 + 3), base = optsOf(g, seed); let sd = seed * 104729;
+  const S0 = W.Steer.create(Object.assign({}, base)); S0.o.arena = 7; const parts = [];
+  for (let p = 0; p < P; p++) parts.push({ o: S0.o, r: W.LineGen.mulberry(++sd), st: JSON.parse(JSON.stringify(S0.st)), comps: S0.comps.slice(), pts: S0.pts, x: S0.x, y: S0.y, t: S0.t, choices: [], lw: 0, prev: 0, hist: null });
+  for (let t1 = H; t1 <= secs + 1e-9; t1 += H) {
+    for (const C of parts) {
+      while (C.t < t1) { W.Steer.step(C, W.judge); if (C.comps.length > 400) C.comps = C.comps.slice(-200); if (C.choices.length > 50) C.choices = C.choices.slice(-10); }
+      const cut = C.t * 1000 - 12000; let k = 0; while (k < C.pts.length && C.pts[k][3] < cut) k++;
+      if (k > 0) { C.hist = { prev: C.hist, pts: C.pts.slice(0, k) }; C.pts = C.pts.slice(k); }
+    }
+    const o = await judge(parts.map(C => R.windowOf(C.pts)));
+    parts.forEach((C, i) => { const s = steerScore(o[i], 'min'); C.lw += lambda * (s - C.prev); C.prev = s; });
+    const mx = Math.max(...parts.map(C => C.lw)), w = parts.map(C => Math.exp(C.lw - mx)), sw = w.reduce((a, b) => a + b, 0), ess = sw * sw / w.reduce((a, b) => a + b * b, 0);
+    if (ess < P / 2) {
+      const u0 = rng() / P, pick = []; let c = w[0] / sw, i = 0;
+      for (let k = 0; k < P; k++) { const u = u0 + k / P; while (u > c && i < P - 1) { i++; c += w[i] / sw; } pick.push(i); }
+      const old = parts.slice();
+      pick.forEach((i2, k) => { const A = old[i2]; parts[k] = { o: A.o, r: W.LineGen.mulberry(++sd), st: JSON.parse(JSON.stringify(A.st)), comps: A.comps.slice(), pts: A.pts, x: A.x, y: A.y, t: A.t, choices: [], lw: 0, prev: A.prev, hist: A.hist }; });
+    }
+  }
+  const mx = Math.max(...parts.map(C => C.lw)), w = parts.map(C => Math.exp(C.lw - mx)), sw = w.reduce((a, b) => a + b, 0);
+  let u = rng() * sw, i = 0; for (; i < P - 1; i++) { u -= w[i]; if (u <= 0) break; }
+  const chunks = []; for (let h = parts[i].hist; h; h = h.prev) chunks.unshift(h.pts);
+  const all = [].concat(...chunks, parts[i].pts).filter((p, k) => k % 2 === 0);
+  return all;
+}
+async function long(part, parts, out, lambda, secs) {
+  await load(); const F2 = JSON.parse(fs.readFileSync(__dirname + '/night_results/final.json'));
+  const top = F2.settings.filter(s => s.group === 'new').sort((a, b) => b.min_AB - a.min_AB).slice(0, 30), res = [];
+  for (let k = part; k < top.length; k += parts) {
+    const t0 = Date.now(), pts = await longLine(top[k].g, 7700 + k, secs, lambda);
+    res.push({ id: top[k].id, rank: k, score: top[k].min_AB, q: pack(pts) }); console.log('stretch', k, pts.length, 'points', ((Date.now() - t0) / 1000).toFixed(0), 's');
+  }
+  fs.writeFileSync(out, JSON.stringify(res));
+}
+module.exports = { longLine, smc, load, judge, clean, decode, encode, KEYS };
 if (require.main === module) {
   const [mode, ...a] = process.argv.slice(2);
   if (mode === 'dose') dose(+a[0], +a[1], a[2]);
   else if (mode === 'worker') worker();
   else if (mode === 'rescore') rescore(a[0], +a[1], +a[2], a[3], +a[4]);
+  else if (mode === 'long') long(+a[0], +a[1], a[2], +a[3], +a[4]);
   else if (mode === 'encode') console.log(JSON.stringify(JSON.parse(fs.readFileSync(a[0])).map(g => encode(clean(g)))));
 }
