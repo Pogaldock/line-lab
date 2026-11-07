@@ -17,7 +17,9 @@ const free = (T, n, last) => plan.push({ type: 'free', T, arrive: last ? 0 : 3.5
 free([-6, -4], 10);
 // PERLETTER: the walk switches into letter mode for one letter, then straight back to free walk until the next letter
 const PERLETTER = +(process.env.PERLETTER || 0), LFREE = +(process.env.LFREE || 6), LGAP = +(process.env.LGAP || 1.6);
-const units = PERLETTER ? [].concat(...tags.map((t, ti) => [...t].map((ch, ci) => ({ tag: ch, wordStart: ci === 0, wordEnd: ci === t.length - 1, lastWord: ti === tags.length - 1 })))) : tags.map((t, ti) => ({ tag: t, wordStart: true, wordEnd: true, lastWord: ti === tags.length - 1 }));
+// PERLETTER=1: every letter on its own; PERLETTER=2: chunks of 2-3 joined letters, the walk breaks out only between chunks
+function chunks(t) { if (PERLETTER !== 2) return [...t]; const out = []; let i = 0; while (i < t.length) { let n = rnd() < 0.5 ? 2 : 3; if (t.length - i - n === 1) n++; out.push(t.slice(i, i + n)); i += n; } return out; }
+const units = PERLETTER ? [].concat(...tags.map((t, ti) => { const C = chunks(t); return C.map((ch, ci) => ({ tag: ch, wordStart: ci === 0, wordEnd: ci === C.length - 1, lastWord: ti === tags.length - 1 })); })) : tags.map((t, ti) => ({ tag: t, wordStart: true, wordEnd: true, lastWord: ti === tags.length - 1 }));
 let wordK = K, wordY = 0;
 units.forEach((u, ti) => { const tag = u.tag;
   if (u.wordStart) { wordK = K * (0.85 + 0.35 * rnd()); wordY = (rnd() - 0.5) * 7; }
@@ -38,14 +40,20 @@ units.forEach((u, ti) => { const tag = u.tag;
   const end = runs[runs.length - 1][runs[runs.length - 1].length - 1];
   if (G.extras.length) plan.push({ type: 'free', T: [end[0] + 2, end[1] - 0.5], arrive: 1.5, gFar: 0.35, gNear: 0.9, minPulses: 0, maxPulses: 14, approach: true, air: true });   // pen lifted back to where the word ended
   if (u.wordEnd) { x = end[0] + 14 + 6 * rnd(); if (!u.lastWord) free([(end[0] + x) / 2, (rnd() < 0.5 ? -1 : 1) * (6 + 4 * rnd())], FREE); }   // the walk's own stretch between tags
-  else { x = end[0] + LGAP * k * 0.5; free([end[0] + 0.5 * LGAP * k * 0.5, wordY + (rnd() < 0.5 ? -1 : 1) * k * (1.2 + 0.6 * rnd())], LFREE); }   // between letters: back to the walk for a moment, above or below the line
+  else { x = end[0] + LGAP * k * 0.5; plan.push({ type: 'free', T: [end[0] + 0.5 * LGAP * k * 0.5, wordY + (rnd() < 0.5 ? -1 : 1) * k * (1.0 + 0.5 * rnd())], arrive: 2.5, gFar: +(process.env.GBRK || 0.18), gNear: 0.5, minPulses: LFREE, maxPulses: LFREE + 8 }); }   // a flourish between chunks: short, pulled back firmly   // between letters: back to the walk for a moment, above or below the line
 });
 free([x + 6, (rnd() - 0.5) * 8], 12, true);
 
 const SC = LT.makePlanScript(plan, { jD: 0.06, jA: 0.04, zoneScale: 1 });
 const E = L.create(W, R, top[0].g, +seed, { lambda: 2 }), o = E.parts[0].o; o.arena = 1e4; o.script = SC.script; o.sense = SC.sense;
+if (process.env.NOCORNER) { o.modeBias = Object.assign({}, o.modeBias, { corner: -6 }); o.jagRate = 0; }   // no sawtooth next to calligraphy
 (async () => {
-  const score = async (wins) => wins.map((w, i) => { const o2 = F(R.raster(w, SJ.size)), pr = SC.progress(E.parts[i].st), b = 0.15 * pr.pulses + 0.6 * pr.legs - (pr.approach ? 0.1 : 0) * pr.dist; return [o2[1] + b, o2[2] + b]; });
+  // ink already laid down by letters, per plan position (a coarse grid for quick 'is there letter ink near here?' checks)
+  const NOX = +(process.env.NOX || 4), cell = 0.5, inkCache = {};
+  function inkUpTo(i) { if (inkCache[i]) return inkCache[i]; const g = new Set(); plan.slice(0, i).forEach(Lg => { if (Lg.type === 'group') Lg.pts.forEach(p => { const cx = Math.floor(p[0] / cell), cy = Math.floor(p[1] / cell); for (let a = -1; a <= 1; a++) for (let b = -1; b <= 1; b++) g.add((cx + a) + ',' + (cy + b)); }); }); return (inkCache[i] = g); }
+  const crossing = (C) => { const sc = C.st.sc; if (!sc || sc.i >= plan.length) return 0; const Lg = plan[sc.i]; if (Lg.type !== 'free' || Lg.approach) return 0;
+    const g = inkUpTo(sc.i), P = C.pts, T = P[P.length - 1][3]; let n = 0, hit = 0; for (let k = P.length - 1; k >= 0 && P[k][3] > T - 1500; k -= 3) { n++; if (g.has(Math.floor(P[k][0] / cell) + ',' + Math.floor(P[k][1] / cell))) hit++; } return n ? hit / n : 0; };
+  const score = async (wins) => wins.map((w, i) => { const C = E.parts[i], o2 = F(R.raster(w, SJ.size)), pr = SC.progress(C.st), b = 0.15 * pr.pulses + 0.6 * pr.legs - (pr.approach ? 0.1 : 0) * pr.dist - NOX * crossing(C); return [o2[1] + b, o2[2] + b]; });
   let line = [], segs = 0, tEnd = null;
   while (segs < 120) { const r = await E.segment(score, { K: 1, checks: 6 }); line = line.concat(r.pts); segs++; const st = E.parts[0].st; if (st.sc && st.sc.tEnd != null) { tEnd = st.sc.tEnd; break; } }
   if (tEnd != null) line = line.filter(p => p[3] <= tEnd * 1000 + 450);
