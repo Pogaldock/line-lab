@@ -1,0 +1,125 @@
+{
+ "clip_ViT-L-14": {
+  "dims": 768,
+  "pcs": 250,
+  "C": 0.003,
+  "auc": 0.8134,
+  "top5_pct_good": 90.1,
+  "top10_pct_good": 91.0,
+  "other_split": {
+   "auc": 0.8108,
+   "top5_pct_good": 90.1,
+   "top10_pct_good": 91.0
+  }
+ },
+ "dinov2_vitb14": {
+  "dims": 1536,
+  "pcs": 250,
+  "C": 0.01,
+  "auc": 0.8183,
+  "top5_pct_good": 93.7,
+  "top10_pct_good": 88.2,
+  "other_split": {
+   "auc": 0.8168,
+   "top5_pct_good": 93.7,
+   "top10_pct_good": 86.4
+  }
+ },
+ "dinov2_vitl14": {
+  "dims": 2048,
+  "pcs": 250,
+  "C": 0.003,
+  "auc": 0.8295,
+  "top5_pct_good": 93.7,
+  "top10_pct_good": 90.0,
+  "other_split": {
+   "auc": 0.8253,
+   "top5_pct_good": 94.6,
+   "top10_pct_good": 89.6
+  }
+ },
+ "dinov2_vits14": {
+  "dims": 768,
+  "pcs": 150,
+  "C": 0.003,
+  "auc": 0.8003,
+  "top5_pct_good": 88.3,
+  "top10_pct_good": 86.4,
+  "other_split": {
+   "auc": 0.8049,
+   "top5_pct_good": 87.4,
+   "top10_pct_good": 87.8
+  }
+ },
+ "avg(clip_ViT-L-14+dinov2_vitb14+dinov2_vitl14+dinov2_vits14)": {
+  "auc": 0.8456,
+  "top5_pct_good": 92.8,
+  "top10_pct_good": 91.9
+ },
+ "min(clip_ViT-L-14+dinov2_vitb14+dinov2_vitl14+dinov2_vits14)": {
+  "auc": 0.8365,
+  "top5_pct_good": 94.6,
+  "top10_pct_good": 91.0
+ },
+ "avg(clip_ViT-L-14+dinov2_vitb14)": {
+  "auc": 0.8384,
+  "top5_pct_good": 93.7,
+  "top10_pct_good": 91.0
+ },
+ "min(clip_ViT-L-14+dinov2_vitb14)": {
+  "auc": 0.8281,
+  "top5_pct_good": 95.5,
+  "top10_pct_good": 91.4
+ },
+ "avg(clip_ViT-L-14+dinov2_vitl14)": {
+  "auc": 0.8431,
+  "top5_pct_good": 91.9,
+  "top10_pct_good": 93.2
+ },
+ "min(clip_ViT-L-14+dinov2_vitl14)": {
+  "auc": 0.8376,
+  "top5_pct_good": 95.5,
+  "top10_pct_good": 94.1
+ },
+ "avg(clip_ViT-L-14+dinov2_vits14)": {
+  "auc": 0.8278,
+  "top5_pct_good": 92.8,
+  "top10_pct_good": 90.5
+ },
+ "min(clip_ViT-L-14+dinov2_vits14)": {
+  "auc": 0.8172,
+  "top5_pct_good": 93.7,
+  "top10_pct_good": 91.0
+ },
+ "avg(dinov2_vitb14+dinov2_vitl14)": {
+  "auc": 0.8382,
+  "top5_pct_good": 94.6,
+  "top10_pct_good": 91.4
+ },
+ "min(dinov2_vitb14+dinov2_vitl14)": {
+  "auc": 0.8337,
+  "top5_pct_good": 95.5,
+  "top10_pct_good": 90.0
+ },
+ "avg(dinov2_vitb14+dinov2_vits14)": {
+  "auc": 0.8267,
+  "top5_pct_good": 93.7,
+  "top10_pct_good": 87.8
+ },
+ "min(dinov2_vitb14+dinov2_vits14)": {
+  "auc": 0.8221,
+  "top5_pct_good": 91.9,
+  "top10_pct_good": 87.8
+ },
+ "avg(dinov2_vitl14+dinov2_vits14)": {
+  "auc": 0.8314,
+  "top5_pct_good": 90.1,
+  "top10_pct_good": 89.1
+ },
+ "min(dinov2_vitl14+dinov2_vits14)": {
+  "auc": 0.8274,
+  "top5_pct_good": 91.9,
+  "top10_pct_good": 88.7
+ },
+ "_note": "2212 rated lines, 947 good (42.8% base rate). top5/top10: share rated good among the lines the judge ranks highest, on held-out folds only. The current judge is dinov2_vits14."
+}
