@@ -232,6 +232,12 @@ var self=globalThis;var window=self;
     var spacing = 1 / (o.rate * mRate), sg = o.pulseSigma * (0.9 + 0.2 * r()), mu = Math.log(spacing * o.span * 0.5) + sg * sg;
     var gturn = gA * st.gsign * Math.pow(Math.sin(Math.PI * st.gpos / st.glen), 2);
     st.gpos++; if (st.gpos >= st.glen) { st.gpos = 0; st.glen = gP * (0.7 + 0.6 * r()); if (r() < gF) st.gsign = -st.gsign; }
+    /* script (Nov 7, writing words): may hand the walk its next pulse (length D, direction from ts to te), e.g. a letter
+       written in the walk's own pulses. Timing, overlap and pressure stay the walk's; returning nothing lets the walk run free. */
+    if (o.script && st.ex != null) { var sp = o.script(st, r); if (sp) {
+      comps.push({ t0: st.t0, mu: mu, sg: sg, D: sp.D, ts: sp.ts, te: sp.te, pw: sp.pw == null ? 1 : sp.pw });
+      st.ex += sp.D * Math.cos((sp.ts + sp.te) / 2); st.ey += sp.D * Math.sin((sp.ts + sp.te) / 2);
+      st.h = sp.te; st.tau = Math.max(-1.6, Math.min(1.6, sp.te - sp.ts)); st.legLeft = 0; st.t0 += spacing * Math.sqrt(sp.D) * (0.85 + 0.3 * r()); return; } }
     if (st.legLeft > 0) {
       var qL = (st.legN - st.legLeft) / Math.max(1, st.legN - 1), D0 = Math.exp(st.lD) * 1.35 * mD;
       comps.push({ t0: st.t0, mu: mu, sg: sg, D: D0, ts: st.h, te: st.h + st.sweep, pw: 1.3 - qL * (0.3 + 0.95 * o.jagTaper) });
