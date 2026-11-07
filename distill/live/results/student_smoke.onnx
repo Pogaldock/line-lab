@@ -1,0 +1,557 @@
+
+pytorch
+2.15.0+cpu:™Õ
+ 
+ink
+
+m.0.weight
+m.0.biasgetitemnode_Conv_40"Conv*
+group†*
+pads@@@@†*
+auto_pad"NOTSET†*
+strides@@†*
+	dilations@@†*
+kernel_shape@@†J 
+	namespaceº: __main__.Wrap/m: torch.nn.modules.container.Sequential/m.1: torch.nn.modules.batchnorm.BatchNorm2d/_native_batch_norm_legit_no_training: aten._native_batch_norm_legit_no_training.defaultJ:
+!pkg.onnxscript.rewriter.rule_nameFuseBatchNormIntoConvJº
+pkg.torch.onnx.class_hierarchyô['__main__.Wrap', 'torch.nn.modules.container.Sequential', 'torch.nn.modules.batchnorm.BatchNorm2d', 'aten._native_batch_norm_legit_no_training.default']Jî
+pkg.torch.onnx.fx_node˘%_native_batch_norm_legit_no_training : [num_users=1] = call_function[target=torch.ops.aten._native_batch_norm_legit_no_training.default](args = (%conv2d, %p_m_1_weight, %p_m_1_bias, %b_m_1_running_mean, %b_m_1_running_var, 0.1, 1e-05), kwargs = {})JV
+pkg.torch.onnx.name_scopes8['', 'm', 'm.1', '_native_batch_norm_legit_no_training']J„
+pkg.torch.onnx.stack_traceƒFile "/home/runner/work/line-lab/line-lab/distill/live/strain.py", line 23, in forward
+    def forward(s, ink): return s.m(ink) * s.sd + s.mu
+  File "/opt/hostedtoolcache/Python/3.11.18/x64/lib/python3.11/site-packages/torch/nn/modules/container.py", line 259, in forward
+    input = module(input)
+  File "/opt/hostedtoolcache/Python/3.11.18/x64/lib/python3.11/site-packages/torch/nn/modules/batchnorm.py", line 210, in forward
+    return F.batch_norm(
+˙
+getitemrelu	node_relu"ReluJÉ
+	namespacev: __main__.Wrap/m: torch.nn.modules.container.Sequential/m.2: torch.nn.modules.activation.ReLU/relu: aten.relu.defaultJï
+pkg.torch.onnx.class_hierarchys['__main__.Wrap', 'torch.nn.modules.container.Sequential', 'torch.nn.modules.activation.ReLU', 'aten.relu.default']JÑ
+pkg.torch.onnx.fx_nodej%relu : [num_users=1] = call_function[target=torch.ops.aten.relu.default](args = (%getitem,), kwargs = {})J6
+pkg.torch.onnx.name_scopes['', 'm', 'm.2', 'relu']J˙
+pkg.torch.onnx.stack_trace€File "/home/runner/work/line-lab/line-lab/distill/live/strain.py", line 23, in forward
+    def forward(s, ink): return s.m(ink) * s.sd + s.mu
+  File "/opt/hostedtoolcache/Python/3.11.18/x64/lib/python3.11/site-packages/torch/nn/modules/container.py", line 259, in forward
+    input = module(input)
+  File "/opt/hostedtoolcache/Python/3.11.18/x64/lib/python3.11/site-packages/torch/nn/modules/activation.py", line 143, in forward
+    return F.relu(input, inplace=self.inplace)
+’
+relu
+
+m.3.weight
+m.3.bias	getitem_3node_Conv_41"Conv*
+group†*
+pads@@@@†*
+auto_pad"NOTSET†*
+strides@@†*
+	dilations@@†*
+kernel_shape@@†JÃ
+	namespaceæ: __main__.Wrap/m: torch.nn.modules.container.Sequential/m.4: torch.nn.modules.batchnorm.BatchNorm2d/_native_batch_norm_legit_no_training_1: aten._native_batch_norm_legit_no_training.defaultJ:
+!pkg.onnxscript.rewriter.rule_nameFuseBatchNormIntoConvJº
+pkg.torch.onnx.class_hierarchyô['__main__.Wrap', 'torch.nn.modules.container.Sequential', 'torch.nn.modules.batchnorm.BatchNorm2d', 'aten._native_batch_norm_legit_no_training.default']Jò
+pkg.torch.onnx.fx_node˝%_native_batch_norm_legit_no_training_1 : [num_users=1] = call_function[target=torch.ops.aten._native_batch_norm_legit_no_training.default](args = (%conv2d_1, %p_m_4_weight, %p_m_4_bias, %b_m_4_running_mean, %b_m_4_running_var, 0.1, 1e-05), kwargs = {})JX
+pkg.torch.onnx.name_scopes:['', 'm', 'm.4', '_native_batch_norm_legit_no_training_1']J„
+pkg.torch.onnx.stack_traceƒFile "/home/runner/work/line-lab/line-lab/distill/live/strain.py", line 23, in forward
+    def forward(s, ink): return s.m(ink) * s.sd + s.mu
+  File "/opt/hostedtoolcache/Python/3.11.18/x64/lib/python3.11/site-packages/torch/nn/modules/container.py", line 259, in forward
+    input = module(input)
+  File "/opt/hostedtoolcache/Python/3.11.18/x64/lib/python3.11/site-packages/torch/nn/modules/batchnorm.py", line 210, in forward
+    return F.batch_norm(
+à
+	getitem_3relu_1node_relu_1"ReluJÖ
+	namespacex: __main__.Wrap/m: torch.nn.modules.container.Sequential/m.5: torch.nn.modules.activation.ReLU/relu_1: aten.relu.defaultJï
+pkg.torch.onnx.class_hierarchys['__main__.Wrap', 'torch.nn.modules.container.Sequential', 'torch.nn.modules.activation.ReLU', 'aten.relu.default']Jà
+pkg.torch.onnx.fx_noden%relu_1 : [num_users=1] = call_function[target=torch.ops.aten.relu.default](args = (%getitem_3,), kwargs = {})J8
+pkg.torch.onnx.name_scopes['', 'm', 'm.5', 'relu_1']J˙
+pkg.torch.onnx.stack_trace€File "/home/runner/work/line-lab/line-lab/distill/live/strain.py", line 23, in forward
+    def forward(s, ink): return s.m(ink) * s.sd + s.mu
+  File "/opt/hostedtoolcache/Python/3.11.18/x64/lib/python3.11/site-packages/torch/nn/modules/container.py", line 259, in forward
+    input = module(input)
+  File "/opt/hostedtoolcache/Python/3.11.18/x64/lib/python3.11/site-packages/torch/nn/modules/activation.py", line 143, in forward
+    return F.relu(input, inplace=self.inplace)
+◊
+relu_1
+
+m.6.weight
+m.6.bias	getitem_6node_Conv_42"Conv*
+group†*
+pads@@@@†*
+auto_pad"NOTSET†*
+strides@@†*
+	dilations@@†*
+kernel_shape@@†JÃ
+	namespaceæ: __main__.Wrap/m: torch.nn.modules.container.Sequential/m.7: torch.nn.modules.batchnorm.BatchNorm2d/_native_batch_norm_legit_no_training_2: aten._native_batch_norm_legit_no_training.defaultJ:
+!pkg.onnxscript.rewriter.rule_nameFuseBatchNormIntoConvJº
+pkg.torch.onnx.class_hierarchyô['__main__.Wrap', 'torch.nn.modules.container.Sequential', 'torch.nn.modules.batchnorm.BatchNorm2d', 'aten._native_batch_norm_legit_no_training.default']Jò
+pkg.torch.onnx.fx_node˝%_native_batch_norm_legit_no_training_2 : [num_users=1] = call_function[target=torch.ops.aten._native_batch_norm_legit_no_training.default](args = (%conv2d_2, %p_m_7_weight, %p_m_7_bias, %b_m_7_running_mean, %b_m_7_running_var, 0.1, 1e-05), kwargs = {})JX
+pkg.torch.onnx.name_scopes:['', 'm', 'm.7', '_native_batch_norm_legit_no_training_2']J„
+pkg.torch.onnx.stack_traceƒFile "/home/runner/work/line-lab/line-lab/distill/live/strain.py", line 23, in forward
+    def forward(s, ink): return s.m(ink) * s.sd + s.mu
+  File "/opt/hostedtoolcache/Python/3.11.18/x64/lib/python3.11/site-packages/torch/nn/modules/container.py", line 259, in forward
+    input = module(input)
+  File "/opt/hostedtoolcache/Python/3.11.18/x64/lib/python3.11/site-packages/torch/nn/modules/batchnorm.py", line 210, in forward
+    return F.batch_norm(
+à
+	getitem_6relu_2node_relu_2"ReluJÖ
+	namespacex: __main__.Wrap/m: torch.nn.modules.container.Sequential/m.8: torch.nn.modules.activation.ReLU/relu_2: aten.relu.defaultJï
+pkg.torch.onnx.class_hierarchys['__main__.Wrap', 'torch.nn.modules.container.Sequential', 'torch.nn.modules.activation.ReLU', 'aten.relu.default']Jà
+pkg.torch.onnx.fx_noden%relu_2 : [num_users=1] = call_function[target=torch.ops.aten.relu.default](args = (%getitem_6,), kwargs = {})J8
+pkg.torch.onnx.name_scopes['', 'm', 'm.8', 'relu_2']J˙
+pkg.torch.onnx.stack_trace€File "/home/runner/work/line-lab/line-lab/distill/live/strain.py", line 23, in forward
+    def forward(s, ink): return s.m(ink) * s.sd + s.mu
+  File "/opt/hostedtoolcache/Python/3.11.18/x64/lib/python3.11/site-packages/torch/nn/modules/container.py", line 259, in forward
+    input = module(input)
+  File "/opt/hostedtoolcache/Python/3.11.18/x64/lib/python3.11/site-packages/torch/nn/modules/activation.py", line 143, in forward
+    return F.relu(input, inplace=self.inplace)
+›
+relu_2
+
+m.9.weight
+m.9.bias	getitem_9node_Conv_43"Conv*
+group†*
+pads@@@@†*
+auto_pad"NOTSET†*
+strides@@†*
+	dilations@@†*
+kernel_shape@@†JÕ
+	namespaceø: __main__.Wrap/m: torch.nn.modules.container.Sequential/m.10: torch.nn.modules.batchnorm.BatchNorm2d/_native_batch_norm_legit_no_training_3: aten._native_batch_norm_legit_no_training.defaultJ:
+!pkg.onnxscript.rewriter.rule_nameFuseBatchNormIntoConvJº
+pkg.torch.onnx.class_hierarchyô['__main__.Wrap', 'torch.nn.modules.container.Sequential', 'torch.nn.modules.batchnorm.BatchNorm2d', 'aten._native_batch_norm_legit_no_training.default']Jú
+pkg.torch.onnx.fx_nodeÅ%_native_batch_norm_legit_no_training_3 : [num_users=1] = call_function[target=torch.ops.aten._native_batch_norm_legit_no_training.default](args = (%conv2d_3, %p_m_10_weight, %p_m_10_bias, %b_m_10_running_mean, %b_m_10_running_var, 0.1, 1e-05), kwargs = {})JY
+pkg.torch.onnx.name_scopes;['', 'm', 'm.10', '_native_batch_norm_legit_no_training_3']J„
+pkg.torch.onnx.stack_traceƒFile "/home/runner/work/line-lab/line-lab/distill/live/strain.py", line 23, in forward
+    def forward(s, ink): return s.m(ink) * s.sd + s.mu
+  File "/opt/hostedtoolcache/Python/3.11.18/x64/lib/python3.11/site-packages/torch/nn/modules/container.py", line 259, in forward
+    input = module(input)
+  File "/opt/hostedtoolcache/Python/3.11.18/x64/lib/python3.11/site-packages/torch/nn/modules/batchnorm.py", line 210, in forward
+    return F.batch_norm(
+ä
+	getitem_9relu_3node_relu_3"ReluJÜ
+	namespacey: __main__.Wrap/m: torch.nn.modules.container.Sequential/m.11: torch.nn.modules.activation.ReLU/relu_3: aten.relu.defaultJï
+pkg.torch.onnx.class_hierarchys['__main__.Wrap', 'torch.nn.modules.container.Sequential', 'torch.nn.modules.activation.ReLU', 'aten.relu.default']Jà
+pkg.torch.onnx.fx_noden%relu_3 : [num_users=1] = call_function[target=torch.ops.aten.relu.default](args = (%getitem_9,), kwargs = {})J9
+pkg.torch.onnx.name_scopes['', 'm', 'm.11', 'relu_3']J˙
+pkg.torch.onnx.stack_trace€File "/home/runner/work/line-lab/line-lab/distill/live/strain.py", line 23, in forward
+    def forward(s, ink): return s.m(ink) * s.sd + s.mu
+  File "/opt/hostedtoolcache/Python/3.11.18/x64/lib/python3.11/site-packages/torch/nn/modules/container.py", line 259, in forward
+    input = module(input)
+  File "/opt/hostedtoolcache/Python/3.11.18/x64/lib/python3.11/site-packages/torch/nn/modules/activation.py", line 143, in forward
+    return F.relu(input, inplace=self.inplace)
+‡
+relu_3
+m.12.weight
+	m.12.bias
+getitem_12node_Conv_44"Conv*
+group†*
+pads@@@@†*
+auto_pad"NOTSET†*
+strides@@†*
+	dilations@@†*
+kernel_shape@@†JÕ
+	namespaceø: __main__.Wrap/m: torch.nn.modules.container.Sequential/m.13: torch.nn.modules.batchnorm.BatchNorm2d/_native_batch_norm_legit_no_training_4: aten._native_batch_norm_legit_no_training.defaultJ:
+!pkg.onnxscript.rewriter.rule_nameFuseBatchNormIntoConvJº
+pkg.torch.onnx.class_hierarchyô['__main__.Wrap', 'torch.nn.modules.container.Sequential', 'torch.nn.modules.batchnorm.BatchNorm2d', 'aten._native_batch_norm_legit_no_training.default']Jú
+pkg.torch.onnx.fx_nodeÅ%_native_batch_norm_legit_no_training_4 : [num_users=1] = call_function[target=torch.ops.aten._native_batch_norm_legit_no_training.default](args = (%conv2d_4, %p_m_13_weight, %p_m_13_bias, %b_m_13_running_mean, %b_m_13_running_var, 0.1, 1e-05), kwargs = {})JY
+pkg.torch.onnx.name_scopes;['', 'm', 'm.13', '_native_batch_norm_legit_no_training_4']J„
+pkg.torch.onnx.stack_traceƒFile "/home/runner/work/line-lab/line-lab/distill/live/strain.py", line 23, in forward
+    def forward(s, ink): return s.m(ink) * s.sd + s.mu
+  File "/opt/hostedtoolcache/Python/3.11.18/x64/lib/python3.11/site-packages/torch/nn/modules/container.py", line 259, in forward
+    input = module(input)
+  File "/opt/hostedtoolcache/Python/3.11.18/x64/lib/python3.11/site-packages/torch/nn/modules/batchnorm.py", line 210, in forward
+    return F.batch_norm(
+å
+
+getitem_12relu_4node_relu_4"ReluJÜ
+	namespacey: __main__.Wrap/m: torch.nn.modules.container.Sequential/m.14: torch.nn.modules.activation.ReLU/relu_4: aten.relu.defaultJï
+pkg.torch.onnx.class_hierarchys['__main__.Wrap', 'torch.nn.modules.container.Sequential', 'torch.nn.modules.activation.ReLU', 'aten.relu.default']Jâ
+pkg.torch.onnx.fx_nodeo%relu_4 : [num_users=1] = call_function[target=torch.ops.aten.relu.default](args = (%getitem_12,), kwargs = {})J9
+pkg.torch.onnx.name_scopes['', 'm', 'm.14', 'relu_4']J˙
+pkg.torch.onnx.stack_trace€File "/home/runner/work/line-lab/line-lab/distill/live/strain.py", line 23, in forward
+    def forward(s, ink): return s.m(ink) * s.sd + s.mu
+  File "/opt/hostedtoolcache/Python/3.11.18/x64/lib/python3.11/site-packages/torch/nn/modules/container.py", line 259, in forward
+    input = module(input)
+  File "/opt/hostedtoolcache/Python/3.11.18/x64/lib/python3.11/site-packages/torch/nn/modules/activation.py", line 143, in forward
+    return F.relu(input, inplace=self.inplace)
+÷
+relu_4
+val_35mean	node_mean"
+ReduceMean*
+noop_with_empty_axes †*
+keepdims†Jä
+	namespace}: __main__.Wrap/m: torch.nn.modules.container.Sequential/m.15: torch.nn.modules.pooling.AdaptiveAvgPool2d/mean: aten.mean.dimJõ
+pkg.torch.onnx.class_hierarchyy['__main__.Wrap', 'torch.nn.modules.container.Sequential', 'torch.nn.modules.pooling.AdaptiveAvgPool2d', 'aten.mean.dim']Jé
+pkg.torch.onnx.fx_nodet%mean : [num_users=1] = call_function[target=torch.ops.aten.mean.dim](args = (%relu_4, [-1, -2], True), kwargs = {})J7
+pkg.torch.onnx.name_scopes['', 'm', 'm.15', 'mean']JÉ
+pkg.torch.onnx.stack_trace‰File "/home/runner/work/line-lab/line-lab/distill/live/strain.py", line 23, in forward
+    def forward(s, ink): return s.m(ink) * s.sd + s.mu
+  File "/opt/hostedtoolcache/Python/3.11.18/x64/lib/python3.11/site-packages/torch/nn/modules/container.py", line 259, in forward
+    input = module(input)
+  File "/opt/hostedtoolcache/Python/3.11.18/x64/lib/python3.11/site-packages/torch/nn/modules/pooling.py", line 1514, in forward
+    return F.adaptive_avg_pool2d(input, self.output_size)
+Ò
+mean
+val_40viewnode_Reshape_47"Reshape*
+	allowzero†JÑ
+	namespacew: __main__.Wrap/m: torch.nn.modules.container.Sequential/m.16: torch.nn.modules.flatten.Flatten/view: aten.view.defaultJ<
+!pkg.onnxscript.rewriter.rule_nameMaterializeReshapeShapeJï
+pkg.torch.onnx.class_hierarchys['__main__.Wrap', 'torch.nn.modules.container.Sequential', 'torch.nn.modules.flatten.Flatten', 'aten.view.default']Jó
+pkg.torch.onnx.fx_node}%view : [num_users=1] = call_function[target=torch.ops.aten.view.default](args = (%mean, [%sym_size_int_1, 64]), kwargs = {})J7
+pkg.torch.onnx.name_scopes['', 'm', 'm.16', 'view']J˛
+pkg.torch.onnx.stack_traceﬂFile "/home/runner/work/line-lab/line-lab/distill/live/strain.py", line 23, in forward
+    def forward(s, ink): return s.m(ink) * s.sd + s.mu
+  File "/opt/hostedtoolcache/Python/3.11.18/x64/lib/python3.11/site-packages/torch/nn/modules/container.py", line 259, in forward
+    input = module(input)
+  File "/opt/hostedtoolcache/Python/3.11.18/x64/lib/python3.11/site-packages/torch/nn/modules/flatten.py", line 55, in forward
+    return input.flatten(self.start_dim, self.end_dim)
+˜
+view
+m.17.weight
+	m.17.biaslinearnode_linear"Gemm*
+beta  Ä?†*
+transB†*
+alpha  Ä?†*
+transA †JÜ
+	namespacey: __main__.Wrap/m: torch.nn.modules.container.Sequential/m.17: torch.nn.modules.linear.Linear/linear: aten.linear.defaultJï
+pkg.torch.onnx.class_hierarchys['__main__.Wrap', 'torch.nn.modules.container.Sequential', 'torch.nn.modules.linear.Linear', 'aten.linear.default']J£
+pkg.torch.onnx.fx_nodeà%linear : [num_users=1] = call_function[target=torch.ops.aten.linear.default](args = (%view, %p_m_17_weight, %p_m_17_bias), kwargs = {})J9
+pkg.torch.onnx.name_scopes['', 'm', 'm.17', 'linear']J˙
+pkg.torch.onnx.stack_trace€File "/home/runner/work/line-lab/line-lab/distill/live/strain.py", line 23, in forward
+    def forward(s, ink): return s.m(ink) * s.sd + s.mu
+  File "/opt/hostedtoolcache/Python/3.11.18/x64/lib/python3.11/site-packages/torch/nn/modules/container.py", line 259, in forward
+    input = module(input)
+  File "/opt/hostedtoolcache/Python/3.11.18/x64/lib/python3.11/site-packages/torch/nn/modules/linear.py", line 134, in forward
+    return F.linear(input, self.weight, self.bias)
+Ñ
+linearrelu_5node_relu_5"ReluJÜ
+	namespacey: __main__.Wrap/m: torch.nn.modules.container.Sequential/m.18: torch.nn.modules.activation.ReLU/relu_5: aten.relu.defaultJï
+pkg.torch.onnx.class_hierarchys['__main__.Wrap', 'torch.nn.modules.container.Sequential', 'torch.nn.modules.activation.ReLU', 'aten.relu.default']JÖ
+pkg.torch.onnx.fx_nodek%relu_5 : [num_users=1] = call_function[target=torch.ops.aten.relu.default](args = (%linear,), kwargs = {})J9
+pkg.torch.onnx.name_scopes['', 'm', 'm.18', 'relu_5']J˙
+pkg.torch.onnx.stack_trace€File "/home/runner/work/line-lab/line-lab/distill/live/strain.py", line 23, in forward
+    def forward(s, ink): return s.m(ink) * s.sd + s.mu
+  File "/opt/hostedtoolcache/Python/3.11.18/x64/lib/python3.11/site-packages/torch/nn/modules/container.py", line 259, in forward
+    input = module(input)
+  File "/opt/hostedtoolcache/Python/3.11.18/x64/lib/python3.11/site-packages/torch/nn/modules/activation.py", line 143, in forward
+    return F.relu(input, inplace=self.inplace)
+Ö	
+relu_5
+m.19.weight
+	m.19.biaslinear_1node_linear_1"Gemm*
+beta  Ä?†*
+transB†*
+alpha  Ä?†*
+transA †Jà
+	namespace{: __main__.Wrap/m: torch.nn.modules.container.Sequential/m.19: torch.nn.modules.linear.Linear/linear_1: aten.linear.defaultJï
+pkg.torch.onnx.class_hierarchys['__main__.Wrap', 'torch.nn.modules.container.Sequential', 'torch.nn.modules.linear.Linear', 'aten.linear.default']Jß
+pkg.torch.onnx.fx_nodeå%linear_1 : [num_users=1] = call_function[target=torch.ops.aten.linear.default](args = (%relu_5, %p_m_19_weight, %p_m_19_bias), kwargs = {})J;
+pkg.torch.onnx.name_scopes['', 'm', 'm.19', 'linear_1']J˙
+pkg.torch.onnx.stack_trace€File "/home/runner/work/line-lab/line-lab/distill/live/strain.py", line 23, in forward
+    def forward(s, ink): return s.m(ink) * s.sd + s.mu
+  File "/opt/hostedtoolcache/Python/3.11.18/x64/lib/python3.11/site-packages/torch/nn/modules/container.py", line 259, in forward
+    input = module(input)
+  File "/opt/hostedtoolcache/Python/3.11.18/x64/lib/python3.11/site-packages/torch/nn/modules/linear.py", line 134, in forward
+    return F.linear(input, self.weight, self.bias)
+ë
+linear_1
+sdmul_18node_mul_18"MulJ4
+	namespace': __main__.Wrap/mul_18: aten.mul.TensorJF
+pkg.torch.onnx.class_hierarchy$['__main__.Wrap', 'aten.mul.Tensor']Jã
+pkg.torch.onnx.fx_nodeq%mul_18 : [num_users=1] = call_function[target=torch.ops.aten.mul.Tensor](args = (%linear_1, %b_sd), kwargs = {})J,
+pkg.torch.onnx.name_scopes['', 'mul_18']J¨
+pkg.torch.onnx.stack_traceçFile "/home/runner/work/line-lab/line-lab/distill/live/strain.py", line 23, in forward
+    def forward(s, ink): return s.m(ink) * s.sd + s.mu
+˛
+mul_18
+muoutnode_add"AddJ1
+	namespace$: __main__.Wrap/add: aten.add.TensorJF
+pkg.torch.onnx.class_hierarchy$['__main__.Wrap', 'aten.add.Tensor']JÜ
+pkg.torch.onnx.fx_nodel%add : [num_users=1] = call_function[target=torch.ops.aten.add.Tensor](args = (%mul_18, %b_mu), kwargs = {})J)
+pkg.torch.onnx.name_scopes['', 'add']J¨
+pkg.torch.onnx.stack_traceçFile "/home/runner/work/line-lab/line-lab/distill/live/strain.py", line 23, in forward
+    def forward(s, ink): return s.m(ink) * s.sd + s.mu
+main_graph*SB
+m.0.weightj
+locationstudent.onnx.dataj
+offset0j
+length576p*PBm.0.biasJ@Ä_><Î+==µIÑºÎ9;ºîpﬁ=£†Ω]^æ ú= ÆJæ!›Ω◊ÑE>“E<@Nr=Ö∫<ç”>83:æ*ë Bm.3.biasJÄΩeΩ>òéuΩ>∂†Ω˛xæíùÍΩ∫wN>œ=v˛æˆ}-Ωâe’=ªÏÿΩ’È§;yëæ¶t∏Ω–d=Ø§=ÑFΩ ]πÎ……Ω˛+<ÿªôΩ"öNΩ≈·(>î^˘º˜‚C<ÉDrΩÖΩ;Œ±ΩE;>Êï>4wcæEËæ>*ë@Bm.6.biasJÄ(©Ö>∑qéΩÓ€<ÑPÔªqº;ÏNºO∞>ë“aæÔä=º}(ΩëBuæÜc+æ‚≈æ∫&æÅÑΩ÷ÑΩöâ<Á»‚Ω¯+w>Øß>òUº‘-ÂºGu¿Ω<ÆO<b·¶ºÉyQ>!—6>!NæQ˙\Ω:2Ω å,>JøÒ>Èæ˝wTæÆçàæ—ı&=VÈw>tßdΩ§læÚNΩ{“ÑºÌ?æ{¢pæ≥^QΩæ˚\º8HË<Ï!Ωguµ={`r=*æ3.W>…´ºarˆ<uÇΩ≠Â=µIª≤\∂=‚èôæ†≤m=oÄ.ælÉÎΩ à;1ﬁÿΩ¥û]Ω*ë@Bm.9.biasJÄ+¬”Ω ‚úΩK∞æh~GæPmwæú”Èæ≈Ä&>s Ω Óöæy◊„>ÇxÏ=Íguº]+éæ\Úñ<˝<≈><b;£≥∂=eÁ=`Øƒ=Ω>Sâ!æ|¸e>}zæá5‰ΩP`¢Ωæ>8Áπ=e,]æv<5ÆëΩX∆?ª≈ﬂÙ>µ¶›ΩräÁΩå§JΩÉv˝æ#tSæ >ÁÖ
+=ID·;M29>sk>÷ø/Ωênâ;»õ Ω9ÍAæ.Œ;˛Ë>ß◊æ4eñ=Ò±xæ«9‰æ´=M_æÏDÊ>=–pæÑÇñæﬂf'æè,Ñ>ºW>Ë≈æ<à´æù∂>*í@B	m.12.biasJÄ˙>+
+>‘°[æDjº<Îí8æUÚ&æ&ªΩ%‰æÌXjΩãÏcΩzŸCΩ§ÚÓææƒmæÇÁ=>æª>ÌŒ‡Ωx±?e°∂>œt?‹æ«!?zàÓ>E≥€ºz	 º¡“∆Ω!D!æéæ∫ΩB“fæÉp◊>„?OÇæ§ƒ√<£>Cæ&ägΩiî•Ω±f´<€Ñ¯<öÇ¶Ω*b÷Ωc)ærA√ª`N§æd„ì>|êEæ·v6æ¿wêæl‚ΩE≤é>Ø∞Ê< :>$À£>ñönΩöˇ€>VaEº–âö>∆£ﬂºÄA=uf=≈ÅÅæìîSæ›	ÿ>ìA™æFlæ*í@B	m.17.biasJÄÇUª=oiæ;>L,=@°Í=¥º¥ΩAEΩö‰Ω˜.ê=jÒ‰Ωé’<CS˜Ω$Yº∂ =ı<ª<ÃòÔ=@òΩµ≈Ì=¸0©<·◊MΩã|D=∫Ω,ˆ=`ƒºdŸ–Ω=TΩàf[=ÛŸ<LQ·Ω]dŒΩÅ¨”º¬Z’Ωû>=5fè=eΩÒ`uº‘-Œ=Dú€=wRÄª‚ÁΩX3I=‡Ÿ=>ÙΩqè=±√Ωg=}DO;#ôÇº‰1a=»Ωí⁄:êÛE=™|ãΩÍ«œ=˜ÕÕΩêÁhΩdN#Ω˘LÌ=‰1=~]™Ω(B›;πnæÅ—DΩ¯XmΩ@Ü≠=*R@Bm.19.weightj
+locationstudent.onnx.dataj
+offset576j
+length768p*B	m.19.biasJ\ùΩgeﬂ=VÉË=*BmuJˇú?Eb¬>îç?*BsdJÇƒ?§O¡?{™Õ?*X B
+m.3.weightj
+locationstudent.onnx.dataj
+offset1344j
+length18432p*Y@ B
+m.6.weightj
+locationstudent.onnx.dataj
+offset19776j
+length73728p*Z@@B
+m.9.weightj
+locationstudent.onnx.dataj
+offset93504j
+length147456p*\@@Bm.12.weightj
+locationstudent.onnx.dataj
+offset240960j
+length147456p*W@@Bm.17.weightj
+locationstudent.onnx.dataj
+offset388416j
+length16384p*Bval_35Jˇˇˇˇˇˇˇˇ˛ˇˇˇˇˇˇˇ*Bval_40Jˇˇˇˇˇˇˇˇ@       Z∆
+ink
+
+n
+
+`
+`"=
+/pkg.torch.export.graph_signature.InputSpec.kind
+USER_INPUT"=
+5pkg.torch.export.graph_signature.InputSpec.persistentNone"(
+!pkg.torch.onnx.original_node_nameinkbÅ
+out
+	
+n
+"?
+0pkg.torch.export.graph_signature.OutputSpec.kindUSER_OUTPUT"(
+!pkg.torch.onnx.original_node_nameaddj$
+
+m.0.weight
+
+
+
+
+j
+m.0.bias
+
+
+j
+m.3.bias
+
+
+ j
+m.6.bias
+
+
+@j
+m.9.bias
+
+
+@j
+	m.12.bias
+
+
+@j∆
+	m.17.bias
+
+
+@"<
+/pkg.torch.export.graph_signature.InputSpec.kind	PARAMETER"=
+5pkg.torch.export.graph_signature.InputSpec.persistentNone"0
+!pkg.torch.onnx.original_node_namep_m_17_biasjŒ
+m.19.weight
+
+
+@"<
+/pkg.torch.export.graph_signature.InputSpec.kind	PARAMETER"=
+5pkg.torch.export.graph_signature.InputSpec.persistentNone"2
+!pkg.torch.onnx.original_node_namep_m_19_weightj∆
+	m.19.bias
+
+
+"<
+/pkg.torch.export.graph_signature.InputSpec.kind	PARAMETER"=
+5pkg.torch.export.graph_signature.InputSpec.persistentNone"0
+!pkg.torch.onnx.original_node_namep_m_19_biasjµ
+mu
+
+
+"9
+/pkg.torch.export.graph_signature.InputSpec.kindBUFFER"=
+5pkg.torch.export.graph_signature.InputSpec.persistentTrue")
+!pkg.torch.onnx.original_node_nameb_mujµ
+sd
+
+
+"9
+/pkg.torch.export.graph_signature.InputSpec.kindBUFFER"=
+5pkg.torch.export.graph_signature.InputSpec.persistentTrue")
+!pkg.torch.onnx.original_node_nameb_sdj$
+
+m.3.weight
+
+ 
+
+
+j$
+
+m.6.weight
+
+@
+ 
+
+j$
+
+m.9.weight
+
+@
+@
+
+j%
+m.12.weight
+
+@
+@
+
+jŒ
+m.17.weight
+
+@
+@"<
+/pkg.torch.export.graph_signature.InputSpec.kind	PARAMETER"=
+5pkg.torch.export.graph_signature.InputSpec.persistentNone"2
+!pkg.torch.onnx.original_node_namep_m_17_weightjR
+val_35
+
+
+"<
+$pkg.onnxscript.optimizer.folded_from['val_33', 'val_34']j
+val_40
+
+
+j"
+getitem
+
+n
+
+0
+0j
+relu
+
+n
+
+0
+0j$
+	getitem_3
+
+n
+ 
+
+j!
+relu_1
+
+n
+ 
+
+j$
+	getitem_6
+
+n
+@
+
+j!
+relu_2
+
+n
+@
+
+j$
+	getitem_9
+
+n
+@
+
+j!
+relu_3
+
+n
+@
+
+j%
+
+getitem_12
+
+n
+@
+
+j!
+relu_4
+
+n
+@
+
+j
+mean
+
+n
+@
+
+j
+view
+	
+n
+@j
+linear
+	
+n
+@j
+relu_5
+	
+n
+@j
+linear_1
+	
+n
+j
+mul_18
+	
+n
+Çî
+0pkg.torch.export.ExportedProgram.graph_signatureﬂ
+# inputs
+p_m_0_weight: PARAMETER target='m.0.weight'
+p_m_0_bias: PARAMETER target='m.0.bias'
+p_m_1_weight: PARAMETER target='m.1.weight'
+p_m_1_bias: PARAMETER target='m.1.bias'
+p_m_3_weight: PARAMETER target='m.3.weight'
+p_m_3_bias: PARAMETER target='m.3.bias'
+p_m_4_weight: PARAMETER target='m.4.weight'
+p_m_4_bias: PARAMETER target='m.4.bias'
+p_m_6_weight: PARAMETER target='m.6.weight'
+p_m_6_bias: PARAMETER target='m.6.bias'
+p_m_7_weight: PARAMETER target='m.7.weight'
+p_m_7_bias: PARAMETER target='m.7.bias'
+p_m_9_weight: PARAMETER target='m.9.weight'
+p_m_9_bias: PARAMETER target='m.9.bias'
+p_m_10_weight: PARAMETER target='m.10.weight'
+p_m_10_bias: PARAMETER target='m.10.bias'
+p_m_12_weight: PARAMETER target='m.12.weight'
+p_m_12_bias: PARAMETER target='m.12.bias'
+p_m_13_weight: PARAMETER target='m.13.weight'
+p_m_13_bias: PARAMETER target='m.13.bias'
+p_m_17_weight: PARAMETER target='m.17.weight'
+p_m_17_bias: PARAMETER target='m.17.bias'
+p_m_19_weight: PARAMETER target='m.19.weight'
+p_m_19_bias: PARAMETER target='m.19.bias'
+b_mu: BUFFER target='mu' persistent=True
+b_sd: BUFFER target='sd' persistent=True
+b_m_1_running_mean: BUFFER target='m.1.running_mean' persistent=True
+b_m_1_running_var: BUFFER target='m.1.running_var' persistent=True
+b_m_1_num_batches_tracked: BUFFER target='m.1.num_batches_tracked' persistent=True
+b_m_4_running_mean: BUFFER target='m.4.running_mean' persistent=True
+b_m_4_running_var: BUFFER target='m.4.running_var' persistent=True
+b_m_4_num_batches_tracked: BUFFER target='m.4.num_batches_tracked' persistent=True
+b_m_7_running_mean: BUFFER target='m.7.running_mean' persistent=True
+b_m_7_running_var: BUFFER target='m.7.running_var' persistent=True
+b_m_7_num_batches_tracked: BUFFER target='m.7.num_batches_tracked' persistent=True
+b_m_10_running_mean: BUFFER target='m.10.running_mean' persistent=True
+b_m_10_running_var: BUFFER target='m.10.running_var' persistent=True
+b_m_10_num_batches_tracked: BUFFER target='m.10.num_batches_tracked' persistent=True
+b_m_13_running_mean: BUFFER target='m.13.running_mean' persistent=True
+b_m_13_running_var: BUFFER target='m.13.running_var' persistent=True
+b_m_13_num_batches_tracked: BUFFER target='m.13.num_batches_tracked' persistent=True
+ink: USER_INPUT
+
+# outputs
+add: USER_OUTPUT
+ÇJ
+2pkg.torch.export.ExportedProgram.range_constraints{s82: VR[0, int_oo]}B
+ 
