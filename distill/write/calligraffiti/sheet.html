@@ -1,0 +1,24 @@
+<!doctype html><canvas id="c"></canvas><script src="alphabet.js"></script>
+<script>
+// broad nib: a pen edge of length `nib` held at angle `ang`, swept along the line (thick across the edge, hairline along it)
+function nibStroke(cx, P, s, ox, oy, nib, ang, col) {
+  const hx = Math.cos(ang) * nib / 2, hy = Math.sin(ang) * nib / 2; cx.fillStyle = col; cx.strokeStyle = col; cx.lineWidth = 1.1;
+  for (let i = 1; i < P.length; i++) { const a = [ox + P[i - 1][0] * s, oy + P[i - 1][1] * s], b = [ox + P[i][0] * s, oy + P[i][1] * s];
+    cx.beginPath(); cx.moveTo(a[0] + hx, a[1] + hy); cx.lineTo(b[0] + hx, b[1] + hy); cx.lineTo(b[0] - hx, b[1] - hy); cx.lineTo(a[0] - hx, a[1] - hy); cx.closePath(); cx.fill(); cx.stroke(); }
+}
+const r0H = () => 470;
+window.draw = (rows, theme) => {
+  const W = 1500, rowH = r0H(), c = document.getElementById('c'); c.width = W; c.height = rows.length * rowH; const cx = c.getContext('2d');
+  const bg = theme === 'paper' ? '#efe8dc' : '#0e0f12', ink = theme === 'paper' ? '#141416' : '#f0eade', pink = '#ff4fa3';
+  cx.fillStyle = bg; cx.fillRect(0, 0, W, c.height);
+  rows.forEach((r, k) => {
+    const G = Calligraffiti.word(r.text, r.opt), xs = G.line.map(p => p[0]), s = Math.min(r.s || 95, (W - 120) / (Math.max(...xs) - Math.min(...xs) + 0.8));
+    const ox = 60 - Math.min(...xs) * s, oy = k * rowH + rowH * 0.6;
+    nibStroke(cx, G.line, s, ox, oy, s * (r.nib || 0.16), r.ang == null ? -0.75 : r.ang, r.pink ? pink : ink);
+    G.extras.forEach(e => { if (e.kind === 'dot') { cx.fillStyle = r.pink ? pink : ink; cx.beginPath(); cx.ellipse(ox + e.at[0] * s, oy + e.at[1] * s, s * 0.07, s * 0.05, -0.6, 0, 7); cx.fill(); }
+      else nibStroke(cx, [e.a, e.b], s, ox, oy, s * (r.nib || 0.16), r.ang == null ? -0.75 : r.ang, r.pink ? pink : ink); });
+    cx.fillStyle = '#8a8d95'; cx.font = '18px monospace'; cx.fillText(r.label, 20, k * rowH + 28);
+  });
+  return c.toDataURL('image/png');
+};
+</script>
