@@ -2,3 +2,5 @@ node_modules/
 distill/data/
 distill/judge.onnx
 distill/judges.onnx
+distill/write/m*.png
+distill/write/m_*.json
