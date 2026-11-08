@@ -796,7 +796,8 @@ jobs:
           ls feats || true
           FEATS=feats python judges2.py t2
           ls -la t2
-          npm i -s --no-save onnxruntime-node@1.20.1
+          rm -rf ~/.cache/torch ~/.cache/pip ~/.cache/huggingface feats data/*.u8; df -h . | tail -1   # free disk before the node check (2.4 GB of models on disk)
+          npm i --no-save onnxruntime-node@1.20.1 2>&1 | tail -5
           # the same judge through night.js (what steering and validation use), on real windows from a short steered line
           JUDGES2=t2 node -e "const N=require('./night.js'),W=require('./walkmods.js'),R=require('./raster.js'),L=require('./live/steer.js');(async()=>{await N.load();const g=JSON.parse(require('fs').readFileSync('night_results/final.json')).settings[0].g;const E=L.create(W,R,g,1,{lambda:2});const w=E.ask();const t0=Date.now();const o=await N.judge(w);console.log('night.js judge2 ok,',w.length,'windows in',((Date.now()-t0)/1000).toFixed(1),'s; first',o[0].map(v=>v.toFixed(3)).join(' '))})()"
           mkdir -p onnx2 && cp t2/judges2.json t2/calib2.json onnx2/
