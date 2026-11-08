@@ -2,7 +2,7 @@ name: judge models
 on:
   workflow_dispatch:
     inputs:
-      stage: { description: 'teacher2 (build the new big judge: DINOv2 large + CLIP large) | judge2 (bigger image models and a combination, scored on precision at the top) | alphabet (found alphabet: hours of plain walk mined for natural letters) | bestof (best-only validation, needs live/results/student_weights_b1.json) | live (student judge for the live line; batch=b1 full, other = smoke test) | bench | bench1 | gen | train | student | onnx | batch | alldata | long | combine | lcurve | qd | qds (search scored on steered lines) | qdb (continue qd from run_id) | bc | judges | night | nlong', required: true, default: 'bench' }
+      stage: { description: 'teacher2 (build the new big judge: DINOv2 large + CLIP large) | judge2 (bigger image models and a combination, scored on precision at the top) | alphabet (found alphabet: hours of plain walk mined for natural letters) | bestof (best-only validation, needs live/results/student_weights_b1.json) | bestof2 (best-only head-to-head b1 vs t2a, graded by the new judge; batch=smoke or full, run_id=teacher2 run) | live (student judge for the live line; batch=b1 full, other = smoke test) | bench | bench1 | gen | train | student | onnx | batch | alldata | long | combine | lcurve | qd | qds (search scored on steered lines) | qdb (continue qd from run_id) | bc | judges | night | nlong', required: true, default: 'bench' }
       teacher: { description: 'model key from bench.json', required: false, default: 'dinov2_vits14' }
       batch: { description: 'batch id (batch stage); live/bestof: b1 = the live student, wNN = a student NN wide', required: false, default: 'b1' }
       arms: { description: 'ab (dino/walk), explore, r2 or r3', required: false, default: 'ab' }
@@ -740,6 +740,53 @@ jobs:
       - run: |
           git config user.name "taste-bot"; git config user.email "taste-bot@users.noreply.github.com"
           git add -f distill/live/results/bestof*.json && git commit -m "best-only validation (${{ inputs.batch }})" && for i in 1 2 3 4 5; do git pull --rebase --autostash && git push && break; sleep 7; done
+  b2_val:   # best-only head-to-head: live student (b1) vs the student taught by the new big judge (t2a), all graded by the new big judge
+    needs: preflight
+    if: inputs.stage == 'bestof2'
+    permissions: { contents: read, actions: read }
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix: { part: '${{ fromJSON(inputs.batch == ''smoke'' && ''[0,1]'' || ''[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19]'') }}' }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '22' }
+      - uses: actions/download-artifact@v4   # the new big judge's image models (from the teacher2 run)
+        with:
+          name: teacher2
+          path: distill/t2
+          run-id: ${{ inputs.run_id }}
+          github-token: ${{ github.token }}
+      - working-directory: distill
+        run: |
+          for i in 1 2 3; do npm i -s --no-save onnxruntime-node@1.20.1 && break; echo 'npm retry'; sleep 20; done
+          node -e "const fs=require('fs'),J=require('./onnx_night/judges.json');let b='';for(let k=0;k<J.parts;k++)b+=fs.readFileSync('onnx_night/judges_'+k+'.txt','utf8');fs.writeFileSync('judges.onnx',Buffer.from(b,'base64'))"
+          mkdir -p sdir sdir2 && cp live/results/student_weights_b1.json sdir/student_weights.json && cp live/results/student_weights_t2a.json sdir2/student_weights.json
+          export JUDGES2=t2 J2THREADS=2 CALIB=onnx2/calib2.json SCAL1=live/calib.json SCAL2=onnx2/calib2.json S2DIR=sdir2 CONDS=plain,student,studentBest,student2,student2Best
+          NW=2; NJ=${{ inputs.batch == 'smoke' && '2' || '20' }}; NS=${{ inputs.batch == 'smoke' && '1' || '16' }}; SECS=${{ inputs.batch == 'smoke' && '15' || '54' }}
+          for k in $(seq 0 $((NW - 1))); do node live/sbest.js $(( ${{ matrix.part }} * NW + k )) $(( NJ * NW )) b_$k.json sdir $NS $SECS 3 1.5 & done; wait
+          node -e "let a=[];for(let k=0;k<$NW;k++)a=a.concat(require('./b_'+k+'.json'));require('fs').writeFileSync('best2_${{ matrix.part }}.json',JSON.stringify(a))"
+      - uses: actions/upload-artifact@v4
+        with: { name: 'best2-${{ matrix.part }}', path: 'distill/best2_${{ matrix.part }}.json' }
+  b2_final:
+    if: always() && inputs.stage == 'bestof2' && needs.b2_val.result != 'skipped'
+    needs: b2_val
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.11' }
+      - uses: actions/download-artifact@v4
+        with: { path: distill/bparts, pattern: 'best2-*', merge-multiple: true }
+      - working-directory: distill
+        run: |
+          pip install --quiet numpy
+          mkdir -p live/results && python live/sbestsum.py bparts/*.json && mv live/results/bestof.json live/results/bestof2_${{ inputs.batch }}.json
+      - run: |
+          git config user.name "taste-bot"; git config user.email "taste-bot@users.noreply.github.com"
+          git add -f distill/live/results/bestof2_*.json && git commit -m "best-only head-to-head graded by the new judge (${{ inputs.batch }})" && for i in 1 2 3 4 5; do git pull --rebase --autostash && git push && break; sleep 7; done
   a_gen:
     needs: preflight
     if: inputs.stage == 'alphabet'
