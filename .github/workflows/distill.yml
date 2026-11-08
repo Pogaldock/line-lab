@@ -29,7 +29,7 @@ jobs:
           python bench.py
       - run: |
           git config user.name "taste-bot"; git config user.email "taste-bot@users.noreply.github.com"
-          git add distill/bench.json && git commit -m "judge model benchmark" && git pull --rebase && git push || echo nothing
+          git add distill/bench.json && git commit -m "judge model benchmark" && git pull --rebase --autostash && git push || echo nothing
   gen:
     if: inputs.stage == 'gen'
     runs-on: ubuntu-latest
@@ -57,7 +57,7 @@ jobs:
       - run: |
           mkdir -p distill/data && node -e "const fs=require('fs'),z=require('zlib');let a=[];for(const d of fs.readdirSync('parts'))for(const f of fs.readdirSync('parts/'+d))a=a.concat(JSON.parse(fs.readFileSync('parts/'+d+'/'+f)));fs.writeFileSync('distill/data/gen.json.gz',z.gzipSync(JSON.stringify(a)));console.log('windows',a.length)"
           git config user.name "taste-bot"; git config user.email "taste-bot@users.noreply.github.com"
-          git add -f distill/data/gen.json.gz && git commit -m "training windows" && git pull --rebase && git push
+          git add -f distill/data/gen.json.gz && git commit -m "training windows" && git pull --rebase --autostash && git push
   teach:
     if: inputs.stage == 'train'
     runs-on: ubuntu-latest
@@ -126,7 +126,7 @@ jobs:
           python merge.py && cp parts/fold-5/student_w.json student_w.json
       - run: |
           git config user.name "taste-bot"; git config user.email "taste-bot@users.noreply.github.com"
-          git add distill/student.json distill/student_w.json && git commit -m "small judge copied from ${{ inputs.teacher }}" && git pull --rebase && git push
+          git add distill/student.json distill/student_w.json && git commit -m "small judge copied from ${{ inputs.teacher }}" && git pull --rebase --autostash && git push
   bench1:
     if: inputs.stage == 'bench1'
     runs-on: ubuntu-latest
@@ -148,7 +148,7 @@ jobs:
           python bench1.py "${{ matrix.key }}"
       - run: |
           git config user.name "taste-bot"; git config user.email "taste-bot@users.noreply.github.com"
-          git add distill/bench && git commit -m "bench ${{ matrix.key }}" && for i in 1 2 3 4 5; do git pull --rebase && git push && break; sleep $((RANDOM % 10 + 3)); done
+          git add distill/bench && git commit -m "bench ${{ matrix.key }}" && for i in 1 2 3 4 5; do git pull --rebase --autostash && git push && break; sleep $((RANDOM % 10 + 3)); done
   onnx:
     if: inputs.stage == 'onnx'
     runs-on: ubuntu-latest
@@ -167,7 +167,7 @@ jobs:
           python export.py
       - run: |
           git config user.name "taste-bot"; git config user.email "taste-bot@users.noreply.github.com"
-          git add distill/onnx && git commit -m "full DINO judge (ONNX)" && for i in 1 2 3; do git pull --rebase && git push && break; sleep 5; done
+          git add distill/onnx && git commit -m "full DINO judge (ONNX)" && for i in 1 2 3; do git pull --rebase --autostash && git push && break; sleep 5; done
   batchgen:
     if: inputs.stage == 'batch'
     runs-on: ubuntu-latest
@@ -197,7 +197,7 @@ jobs:
       - run: |
           mkdir -p distill/batches && node -e "const fs=require('fs');let a=[];for(const d of fs.readdirSync('parts'))for(const f of fs.readdirSync('parts/'+d))a=a.concat(JSON.parse(fs.readFileSync('parts/'+d+'/'+f)));if('${{ inputs.batch }}'==='r4'&&fs.existsSync('distill/r4_repeats.json'))a=a.concat(JSON.parse(fs.readFileSync('distill/r4_repeats.json')));a.sort((x,y)=>x.id<y.id?-1:1);fs.writeFileSync('distill/batches/${{ inputs.batch }}.json',JSON.stringify(a));console.log('cards',a.length,'dino',a.filter(c=>c.arm==='dino').length)"
           git config user.name "taste-bot"; git config user.email "taste-bot@users.noreply.github.com"
-          git add distill/batches && git commit -m "card batch ${{ inputs.batch }}" && for i in 1 2 3; do git pull --rebase && git push && break; sleep 5; done
+          git add distill/batches && git commit -m "card batch ${{ inputs.batch }}" && for i in 1 2 3; do git pull --rebase --autostash && git push && break; sleep 5; done
   alldata:
     if: inputs.stage == 'alldata'
     runs-on: ubuntu-latest
@@ -216,7 +216,7 @@ jobs:
           python alldata.py
       - run: |
           git config user.name "taste-bot"; git config user.email "taste-bot@users.noreply.github.com"
-          git add distill/alldata.json && git commit -m "older data test" && for i in 1 2 3; do git pull --rebase && git push && break; sleep 5; done
+          git add distill/alldata.json && git commit -m "older data test" && for i in 1 2 3; do git pull --rebase --autostash && git push && break; sleep 5; done
   combine:
     if: inputs.stage == 'combine' || inputs.stage == 'lcurve'
     runs-on: ubuntu-latest
@@ -235,7 +235,7 @@ jobs:
           if [ "${{ inputs.stage }}" = combine ]; then python combine.py; else python lcurve.py; fi
       - run: |
           git config user.name "taste-bot"; git config user.email "taste-bot@users.noreply.github.com"
-          git add distill/combine.json distill/lcurve.json; git commit -m "${{ inputs.stage }}" && for i in 1 2 3; do git pull --rebase && git push && break; sleep 5; done
+          git add distill/combine.json distill/lcurve.json; git commit -m "${{ inputs.stage }}" && for i in 1 2 3; do git pull --rebase --autostash && git push && break; sleep 5; done
   qd1:
     if: inputs.stage == 'qd' || inputs.stage == 'qds'
     runs-on: ubuntu-latest
@@ -341,7 +341,7 @@ jobs:
       - run: |
           node -e "const fs=require('fs');let o={};for(const f of fs.readdirSync('parts'))Object.assign(o,JSON.parse(fs.readFileSync('parts/'+f)));fs.writeFileSync('distill/qd_archive.json',JSON.stringify(o,null,0));const v=Object.values(o);console.log('cells',v.length,'fresh mean',v.reduce((a,e)=>a+(e.fresh||0),0)/v.length)"
           git config user.name "taste-bot"; git config user.email "taste-bot@users.noreply.github.com"
-          f=distill/qd_archive${{ inputs.stage == 'qds' && '_steered' || '' }}.json; [ "$f" != distill/qd_archive.json ] && mv distill/qd_archive.json $f; git add $f && git commit -m "quality-diversity archive (${{ inputs.stage }})" && for i in 1 2 3; do git pull --rebase && git push && break; sleep 5; done
+          f=distill/qd_archive${{ inputs.stage == 'qds' && '_steered' || '' }}.json; [ "$f" != distill/qd_archive.json ] && mv distill/qd_archive.json $f; git add $f && git commit -m "quality-diversity archive (${{ inputs.stage }})" && for i in 1 2 3; do git pull --rebase --autostash && git push && break; sleep 5; done
   bc:
     if: inputs.stage == 'bc'
     runs-on: ubuntu-latest
@@ -357,7 +357,7 @@ jobs:
         run: python bc.py 2>&1 | tee bc_log.txt
       - run: |
           git config user.name "taste-bot"; git config user.email "taste-bot@users.noreply.github.com"
-          git add distill/bc_policy.json distill/bc_parity.json distill/bc_log.txt && git commit -m "step policy (behavioural cloning)" && for i in 1 2 3 4 5; do git pull --rebase && git push && break; sleep 7; done
+          git add distill/bc_policy.json distill/bc_parity.json distill/bc_log.txt && git commit -m "step policy (behavioural cloning)" && for i in 1 2 3 4 5; do git pull --rebase --autostash && git push && break; sleep 7; done
   judges:
     if: inputs.stage == 'judges'
     runs-on: ubuntu-latest
@@ -378,7 +378,7 @@ jobs:
           mkdir -p onnx_night && python -c "import base64;b=base64.b64encode(open('judges.onnx','rb').read()).decode();n=15000000;P=[b[i:i+n] for i in range(0,len(b),n)];[open(f'onnx_night/judges_{k}.txt','w').write(p) for k,p in enumerate(P)];import json;J=json.load(open('judges.json'));J['parts']=len(P);json.dump(J,open('onnx_night/judges.json','w'),indent=1);print('parts',len(P))"
       - run: |
           git config user.name "taste-bot"; git config user.email "taste-bot@users.noreply.github.com"
-          git add distill/onnx_night && git commit -m "judges for the night: full, half A, half B, two image-feature axes" && for i in 1 2 3 4 5; do git pull --rebase && git push && break; sleep 7; done
+          git add distill/onnx_night && git commit -m "judges for the night: full, half A, half B, two image-feature axes" && for i in 1 2 3 4 5; do git pull --rebase --autostash && git push && break; sleep 7; done
   n_dose:
     if: inputs.stage == 'night'
     runs-on: ubuntu-latest
@@ -509,7 +509,7 @@ jobs:
           ls rs | head; python nightcollect.py final rs/*.json || echo "final step had nothing to collect"
       - run: |
           git config user.name "taste-bot"; git config user.email "taste-bot@users.noreply.github.com"
-          git add distill/night_results && git commit -m "overnight results: pressure sweep, CMA-MAE search, fresh-seed rescoring" && for i in 1 2 3 4 5; do git pull --rebase && git push && break; sleep 7; done
+          git add distill/night_results && git commit -m "overnight results: pressure sweep, CMA-MAE search, fresh-seed rescoring" && for i in 1 2 3 4 5; do git pull --rebase --autostash && git push && break; sleep 7; done
   nlong:
     if: inputs.stage == 'nlong'
     runs-on: ubuntu-latest
@@ -542,7 +542,7 @@ jobs:
       - run: |
           cd distill && node -e "const fs=require('fs');let a=[];for(const f of fs.readdirSync('lp'))a=a.concat(JSON.parse(fs.readFileSync('lp/'+f)));a.sort((x,y)=>x.rank-y.rank);fs.writeFileSync('night_results/long.json',JSON.stringify(a));console.log('stretches',a.length)"
           cd .. && git config user.name "taste-bot" && git config user.email "taste-bot@users.noreply.github.com"
-          git add distill/night_results/long.json && git commit -m "30 steered 3-minute stretches from the top overnight settings" && for i in 1 2 3 4 5; do git pull --rebase && git push && break; sleep 7; done
+          git add distill/night_results/long.json && git commit -m "30 steered 3-minute stretches from the top overnight settings" && for i in 1 2 3 4 5; do git pull --rebase --autostash && git push && break; sleep 7; done
   longgen:
     if: inputs.stage == 'long'
     runs-on: ubuntu-latest
@@ -572,7 +572,7 @@ jobs:
       - run: |
           mkdir -p distill/long && node -e "const fs=require('fs');let a=[];for(const d of fs.readdirSync('parts'))for(const f of fs.readdirSync('parts/'+d))a.push(JSON.parse(fs.readFileSync('parts/'+d+'/'+f)));a.sort((x,y)=>x.seg-y.seg);fs.writeFileSync('distill/long/skate.json',JSON.stringify(a));console.log('segments',a.length,'minutes',a.reduce((s,x)=>s+x.secs,0)/60)"
           git config user.name "taste-bot"; git config user.email "taste-bot@users.noreply.github.com"
-          git add distill/long && git commit -m "long skater paths" && for i in 1 2 3; do git pull --rebase && git push && break; sleep 5; done
+          git add distill/long && git commit -m "long skater paths" && for i in 1 2 3; do git pull --rebase --autostash && git push && break; sleep 5; done
   s_gen:
     if: inputs.stage == 'live'
     runs-on: ubuntu-latest
@@ -653,7 +653,7 @@ jobs:
           mkdir -p live/results && cp student/student_weights.json live/results/student_weights_${{ inputs.batch }}.json; cp student/student.json live/results/student_${{ inputs.batch }}.json && cp student/student.onnx live/results/student_${{ inputs.batch }}.onnx && cp live/results/val.json live/results/val_${{ inputs.batch }}.json || true
       - run: |
           git config user.name "taste-bot"; git config user.email "taste-bot@users.noreply.github.com"
-          git add -f distill/live/results && git commit -m "live student judge: training report and validation (${{ inputs.batch }})" && for i in 1 2 3 4 5; do git pull --rebase && git push && break; sleep 7; done
+          git add -f distill/live/results && git commit -m "live student judge: training report and validation (${{ inputs.batch }})" && for i in 1 2 3 4 5; do git pull --rebase --autostash && git push && break; sleep 7; done
   b_val:
     if: inputs.stage == 'bestof'
     runs-on: ubuntu-latest
@@ -690,7 +690,7 @@ jobs:
           mkdir -p live/results && python live/sbestsum.py bparts/*.json && [ "${{ inputs.batch }}" != b1 ] && mv live/results/bestof.json live/results/bestof_${{ inputs.batch }}.json || true
       - run: |
           git config user.name "taste-bot"; git config user.email "taste-bot@users.noreply.github.com"
-          git add -f distill/live/results/bestof*.json && git commit -m "best-only validation (${{ inputs.batch }})" && for i in 1 2 3 4 5; do git pull --rebase && git push && break; sleep 7; done
+          git add -f distill/live/results/bestof*.json && git commit -m "best-only validation (${{ inputs.batch }})" && for i in 1 2 3 4 5; do git pull --rebase --autostash && git push && break; sleep 7; done
   a_gen:
     if: inputs.stage == 'alphabet'
     runs-on: ubuntu-latest
@@ -724,7 +724,7 @@ jobs:
         run: node found_alphabet.js merge found_alphabet.json 8 fparts/*.json
       - run: |
           git config user.name "taste-bot"; git config user.email "taste-bot@users.noreply.github.com"
-          git add -f distill/write/found_alphabet.json && git commit -m "found alphabet" && for i in 1 2 3 4 5; do git pull --rebase && git push && break; sleep 7; done
+          git add -f distill/write/found_alphabet.json && git commit -m "found alphabet" && for i in 1 2 3 4 5; do git pull --rebase --autostash && git push && break; sleep 7; done
   j2_feat:
     if: inputs.stage == 'judge2'
     runs-on: ubuntu-latest
@@ -767,4 +767,4 @@ jobs:
           python judge2.py feats night_results/judge2.json
       - run: |
           git config user.name "taste-bot"; git config user.email "taste-bot@users.noreply.github.com"
-          git add -f distill/night_results/judge2.json && git commit -m "judge2: bigger image models and a combination, scored on precision at the top" && for i in 1 2 3 4 5; do git pull --rebase && git push && break; sleep 7; done
+          git add -f distill/night_results/judge2.json && git commit -m "judge2: bigger image models and a combination, scored on precision at the top" && for i in 1 2 3 4 5; do git pull --rebase --autostash && git push && break; sleep 7; done
