@@ -6,7 +6,8 @@ cd "$(dirname "$0")/.."
 stage=$1; batch=${2:-}; run_id=${3:-}
 python3 tools/preflight.py "$stage" "$run_id"
 git diff --quiet HEAD -- .github distill || { echo "uncommitted changes in .github or distill: commit and push first"; exit 1; }
-[ "$(git rev-parse HEAD)" = "$(git rev-parse @{u})" ] || { echo "local commit not pushed: the run would use the old version"; exit 1; }
+remote=$(gh api repos/Pogaldock/line-lab/commits/main -q .sha)   # ask GitHub, so it works in any clone
+[ "$(git rev-parse HEAD)" = "$remote" ] || { echo "local commit not pushed (GitHub main is ${remote:0:7}): the run would use the old version"; exit 1; }
 args=(-f ref=main -f "inputs[stage]=$stage")
 [ -n "$batch" ] && args+=(-f "inputs[batch]=$batch")
 [ -n "$run_id" ] && args+=(-f "inputs[run_id]=$run_id")
