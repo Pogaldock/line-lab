@@ -601,8 +601,9 @@ jobs:
           node -e "const fs=require('fs'),J=require('./onnx_night/judges.json');let b='';for(let k=0;k<J.parts;k++)b+=fs.readFileSync('onnx_night/judges_'+k+'.txt','utf8');fs.writeFileSync('judges.onnx',Buffer.from(b,'base64'))"
           MIN=${{ (inputs.batch == 'b1' || startsWith(inputs.batch, 'w') || startsWith(inputs.batch, 't')) && (inputs.stage == 'live2' && '130' || '25') || '2' }}
           [ "${{ inputs.stage }}" = live2 ] && export JUDGES2=t2 && cp t2/judges2.json t2/calib2.json . 2>/dev/null; true
-          for k in 0 1 2 3; do node live/sgen.js $(( ${{ matrix.part }} * 4 + k )) $MIN sdata/p$(( ${{ matrix.part }} * 4 + k )) & done; wait
-          for k in 0 1 2 3; do test -s sdata/p$(( ${{ matrix.part }} * 4 + k ))/y.json || { echo "worker $k produced no data"; exit 1; }; done
+          NW=4; [ "${{ inputs.stage }}" = live2 ] && NW=2 && export J2THREADS=2   # the new judge holds ~2.4 GB per worker: 2 workers x 2 threads fit in memory
+          for k in $(seq 0 $((NW - 1))); do node live/sgen.js $(( ${{ matrix.part }} * 4 + k )) $MIN sdata/p$(( ${{ matrix.part }} * 4 + k )) & done; wait
+          for k in $(seq 0 $((NW - 1))); do test -s sdata/p$(( ${{ matrix.part }} * 4 + k ))/y.json || { echo "worker $k produced no data"; exit 1; }; done
       - uses: actions/upload-artifact@v4
         with: { name: 'sdata-${{ matrix.part }}', path: 'distill/sdata', retention-days: 5 }
   s_train:
@@ -652,8 +653,9 @@ jobs:
           node -e "const fs=require('fs'),J=require('./onnx_night/judges.json');let b='';for(let k=0;k<J.parts;k++)b+=fs.readFileSync('onnx_night/judges_'+k+'.txt','utf8');fs.writeFileSync('judges.onnx',Buffer.from(b,'base64'))"
           [ "${{ inputs.stage }}" = live2 ] && export JUDGES2=t2; true
           NS=${{ (inputs.batch == 'b1' || startsWith(inputs.batch, 'w') || startsWith(inputs.batch, 't')) && '20' || '1' }}; SECS=${{ (inputs.batch == 'b1' || startsWith(inputs.batch, 'w') || startsWith(inputs.batch, 't')) && '60' || '15' }}
-          for k in 0 1 2 3; do node live/sval.js $(( ${{ matrix.part }} * 4 + k )) 40 v_$k.json $NS $SECS & done; wait
-          node -e "let a=[];for(const k of [0,1,2,3])a=a.concat(require('./v_'+k+'.json'));require('fs').writeFileSync('val_${{ matrix.part }}.json',JSON.stringify(a))"
+          NW=4; [ "${{ inputs.stage }}" = live2 ] && NW=2 && export J2THREADS=2
+          for k in $(seq 0 $((NW - 1))); do node live/sval.js $(( ${{ matrix.part }} * NW + k )) $(( 10 * NW )) v_$k.json $NS $SECS & done; wait
+          node -e "let a=[];for(let k=0;k<$NW;k++)a=a.concat(require('./v_'+k+'.json'));require('fs').writeFileSync('val_${{ matrix.part }}.json',JSON.stringify(a))"
       - uses: actions/upload-artifact@v4
         with: { name: 'val-${{ matrix.part }}', path: 'distill/val_${{ matrix.part }}.json' }
   s_final:
