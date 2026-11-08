@@ -57,7 +57,8 @@ print(info, calib, flush=True)
 class Feat(nn.Module):
     def __init__(s, key):
         super().__init__(); s.key = key
-        if key.startswith('dinov2'): s.m = torch.hub.load('facebookresearch/dinov2', key).eval(); norm = models.IMN
+        if key.startswith('dinov2'):   # DINO_REPO: a local clone (the hub's GitHub lookup can time out)
+            s.m = (torch.hub.load(os.environ['DINO_REPO'], key, source='local') if os.environ.get('DINO_REPO') else torch.hub.load('facebookresearch/dinov2', key)).eval(); norm = models.IMN
         else:
             import open_clip; s.m = open_clip.create_model_and_transforms('ViT-L-14', pretrained='laion2b_s32b_b82k')[0].visual.eval(); norm = models.CLIPN
         s.register_buffer('mu', torch.tensor(norm[0])[None, :, None, None]); s.register_buffer('sd', torch.tensor(norm[1])[None, :, None, None])

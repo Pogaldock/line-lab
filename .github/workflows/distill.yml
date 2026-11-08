@@ -812,7 +812,8 @@ jobs:
         run: |
           mkdir -p data && node rast.js ../feed/all_labels.json 224 data/lab224
           ls feats || true
-          ok=0; for i in 1 2 3; do FEATS=feats python judges2.py t2 && ok=1 && break; echo "retry $i (model download can time out)"; sleep 45; done; [ $ok = 1 ]
+          for i in 1 2 3; do git clone -q --depth 1 https://github.com/facebookresearch/dinov2 /tmp/dinov2 && break; sleep 20; done
+          ok=0; for i in 1 2 3; do DINO_REPO=/tmp/dinov2 FEATS=feats python judges2.py t2 && ok=1 && break; echo "retry $i (model download can time out)"; sleep 45; done; [ $ok = 1 ]
           ls -la t2
           # (the night.js check of the new judge happens in the live2 smoke run, which uses it through the same code)
           mkdir -p onnx2 && cp t2/judges2.json t2/calib2.json onnx2/
