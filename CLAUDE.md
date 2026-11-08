@@ -6,6 +6,7 @@ These exist because time was wasted on avoidable job decisions (Nov 2026). Follo
 - Write the critical path in one line: what has to happen in order, what can run side by side, and the expected wall time. If two heavy steps are independent, they go in separate matrix jobs, never one after the other in one job.
 - Check what already exists before computing anything: previous run artifacts (`gh api repos/Pogaldock/line-lab/actions/runs/<id>/artifacts`), files in `distill/night_results`, `distill/live/results`. Reuse features, scores and data instead of recomputing them.
 - Every new or changed stage gets a smoke run first (tiny inputs, a few minutes) that goes all the way through, including the commit and push step, before the full run.
+- Check every job's `timeout-minutes` against its planned run time (work minutes + setup + upload). A smoke run uses tiny minutes, so it cannot catch a time limit that is too short; this check must be done by reading the file.
 - Validate the workflow file (`python3 -c "import yaml; yaml.safe_load(open('.github/workflows/distill.yml'))"`) and the scripts before pushing.
 - Heavy or slow work runs on GitHub Actions, not in the session's own machine (2 cores, shared with everything else).
 
