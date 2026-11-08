@@ -1,0 +1,10 @@
+{
+ "note": "P(good) = 1/(1+exp(-(a*z+b))), z = mean of the A and B z-scores (new big judge: DINOv2 large + CLIP large); fitted on held-out scores",
+ "a": 1.6579136848449707,
+ "b": -0.46152952313423157,
+ "mA": -1.724546727643883e-08,
+ "sA": 0.941428542137146,
+ "mB": -4.1389121463453193e-08,
+ "sB": 0.9446383714675903,
+ "max_observed": 0.979
+}

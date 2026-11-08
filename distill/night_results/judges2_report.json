@@ -1,0 +1,28 @@
+{
+ "info": {
+  "n_labels": 2212,
+  "models": [
+   "dinov2_vitl14",
+   "clip_ViT-L-14"
+  ],
+  "pcs": 250,
+  "A_on_B_half_auc": 0.835279727504816,
+  "B_on_A_half_auc": 0.820868011882142,
+  "A_B_corr": 0.8814010662921304,
+  "heldout_top5_pct_good": 91.9,
+  "heldout_top10_pct_good": 90.0,
+  "dinov2_vitl14_sec_per_window_1thread": 1.87,
+  "clip_ViT-L-14_sec_per_window_1thread": 1.855,
+  "end_to_end_max_diff": 0.00014400482177734375
+ },
+ "calib": {
+  "note": "P(good) = 1/(1+exp(-(a*z+b))), z = mean of the A and B z-scores (new big judge: DINOv2 large + CLIP large); fitted on held-out scores",
+  "a": 1.6579136848449707,
+  "b": -0.46152952313423157,
+  "mA": -1.724546727643883e-08,
+  "sA": 0.941428542137146,
+  "mB": -4.1389121463453193e-08,
+  "sB": 0.9446383714675903,
+  "max_observed": 0.979
+ }
+}
