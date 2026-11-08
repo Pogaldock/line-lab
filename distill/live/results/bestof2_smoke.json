@@ -1,0 +1,48 @@
+{
+ "n_lines": 10,
+ "plain": {
+  "predicted_good_pct": 45.0,
+  "se_pct": 11.4,
+  "share_windows_top5pct": 0.0,
+  "tries_per_segment": 1.0,
+  "n": 2
+ },
+ "student": {
+  "predicted_good_pct": 35.3,
+  "se_pct": 8.3,
+  "share_windows_top5pct": 0.0,
+  "tries_per_segment": 1.0,
+  "n": 2
+ },
+ "studentBest": {
+  "predicted_good_pct": 65.0,
+  "se_pct": 1.9,
+  "share_windows_top5pct": 0.0,
+  "tries_per_segment": 3.0,
+  "n": 2
+ },
+ "student2": {
+  "predicted_good_pct": 52.6,
+  "se_pct": 9.7,
+  "share_windows_top5pct": 0.0,
+  "tries_per_segment": 1.0,
+  "n": 2
+ },
+ "student2Best": {
+  "predicted_good_pct": 74.9,
+  "se_pct": 4.3,
+  "share_windows_top5pct": 0.25,
+  "tries_per_segment": 2.25,
+  "n": 2
+ },
+ "student2_minus_student": {
+  "pct_points": 17.3,
+  "se": 18.0,
+  "n": 2
+ },
+ "student2Best_minus_studentBest": {
+  "pct_points": 9.9,
+  "se": 2.5,
+  "n": 2
+ }
+}
