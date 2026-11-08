@@ -10,6 +10,9 @@ on:
 permissions:
   contents: write
   actions: read
+env:
+  ONNXRUNTIME_NODE_INSTALL_CUDA: skip   # onnxruntime-node would otherwise fetch GPU binaries from GitHub releases on Linux
+
 jobs:
   bench:
     if: inputs.stage == 'bench'
@@ -580,7 +583,7 @@ jobs:
     timeout-minutes: 90
     strategy:
       fail-fast: false
-      matrix: { part: '${{ fromJSON((inputs.batch == ''b1'' || startsWith(inputs.batch, ''w'') || startsWith(inputs.batch, ''t'')) && ''[0,1,2,3,4,5,6,7,8,9,10,11]'' || ''[0,1]'') }}' }
+      matrix: { part: '${{ fromJSON((inputs.batch == ''b1'' || startsWith(inputs.batch, ''w'') || startsWith(inputs.batch, ''t'')) && (inputs.stage == ''live2'' && ''[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19]'' || ''[0,1,2,3,4,5,6,7,8,9,10,11]'') || ''[0,1]'') }}' }
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -599,6 +602,7 @@ jobs:
           MIN=${{ (inputs.batch == 'b1' || startsWith(inputs.batch, 'w') || startsWith(inputs.batch, 't')) && (inputs.stage == 'live2' && '130' || '25') || '2' }}
           [ "${{ inputs.stage }}" = live2 ] && export JUDGES2=t2 && cp t2/judges2.json t2/calib2.json . 2>/dev/null; true
           for k in 0 1 2 3; do node live/sgen.js $(( ${{ matrix.part }} * 4 + k )) $MIN sdata/p$(( ${{ matrix.part }} * 4 + k )) & done; wait
+          for k in 0 1 2 3; do test -s sdata/p$(( ${{ matrix.part }} * 4 + k ))/y.json || { echo "worker $k produced no data"; exit 1; }; done
       - uses: actions/upload-artifact@v4
         with: { name: 'sdata-${{ matrix.part }}', path: 'distill/sdata', retention-days: 5 }
   s_train:
