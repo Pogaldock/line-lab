@@ -30,6 +30,16 @@ async function load(dir) {
     const orig = sess.run.bind(sess); sess.run = async (f) => { const d = (await orig(f)).score.data, o = new Float32Array(d.length * 5); d.forEach((v, k) => { o.set([v, v, v * 0.8, v * 0.1, -v * 0.1], k * 5); }); return { out: { data: o } }; };
     return JM;
   }
+  if (process.env.JUDGES2) {   // the new big judge (Nov 8): two image models (ONNX, raw features) + linear scorers from judges2.json
+    const d2 = process.env.JUDGES2; JM = JSON.parse(fs.readFileSync(d2 + '/judges2.json'));
+    const S2 = []; for (const f of JM.files) S2.push(await ORT().InferenceSession.create(d2 + '/' + f, { intraOpNumThreads: +(process.env.J2THREADS || 1) }));
+    const Wm = JM.W, bv = JM.b, dims = JM.feat_dims;
+    sess = { run: async (feed) => { const n = feed.ink.dims[0], F = []; for (const s of S2) F.push((await s.run({ ink: feed.ink })).feat.data);
+      const o = new Float32Array(n * 5);
+      for (let k = 0; k < n; k++) for (let j = 0; j < 5; j++) { let v = bv[j], off = 0; for (let m = 0; m < F.length; m++) { const D = dims[m], row = Wm[j]; for (let i = 0; i < D; i++) v += row[off + i] * F[m][k * D + i]; off += D; } o[k * 5 + j] = v; }
+      return { out: { data: o } }; } };
+    return JM;
+  }
   dir = dir || __dirname + '/onnx_night'; JM = JSON.parse(fs.readFileSync(dir + '/judges.json'));
   const f = __dirname + '/judges.onnx';
   if (!fs.existsSync(f)) { let b = ''; for (let k = 0; k < JM.parts; k++) b += fs.readFileSync(`${dir}/judges_${k}.txt`, 'utf8'); fs.writeFileSync(f, Buffer.from(b, 'base64')); }

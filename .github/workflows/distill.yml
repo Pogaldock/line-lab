@@ -2,7 +2,7 @@ name: judge models
 on:
   workflow_dispatch:
     inputs:
-      stage: { description: 'judge2 (bigger image models and a combination, scored on precision at the top) | alphabet (found alphabet: hours of plain walk mined for natural letters) | bestof (best-only validation, needs live/results/student_weights_b1.json) | live (student judge for the live line; batch=b1 full, other = smoke test) | bench | bench1 | gen | train | student | onnx | batch | alldata | long | combine | lcurve | qd | qds (search scored on steered lines) | qdb (continue qd from run_id) | bc | judges | night | nlong', required: true, default: 'bench' }
+      stage: { description: 'teacher2 (build the new big judge: DINOv2 large + CLIP large) | judge2 (bigger image models and a combination, scored on precision at the top) | alphabet (found alphabet: hours of plain walk mined for natural letters) | bestof (best-only validation, needs live/results/student_weights_b1.json) | live (student judge for the live line; batch=b1 full, other = smoke test) | bench | bench1 | gen | train | student | onnx | batch | alldata | long | combine | lcurve | qd | qds (search scored on steered lines) | qdb (continue qd from run_id) | bc | judges | night | nlong', required: true, default: 'bench' }
       teacher: { description: 'model key from bench.json', required: false, default: 'dinov2_vits14' }
       batch: { description: 'batch id (batch stage); live/bestof: b1 = the live student, wNN = a student NN wide', required: false, default: 'b1' }
       arms: { description: 'ab (dino/walk), explore, r2 or r3', required: false, default: 'ab' }
@@ -768,3 +768,30 @@ jobs:
       - run: |
           git config user.name "taste-bot"; git config user.email "taste-bot@users.noreply.github.com"
           git add -f distill/night_results/judge2.json && git commit -m "judge2: bigger image models and a combination, scored on precision at the top" && for i in 1 2 3 4 5; do git pull --rebase --autostash && git push && break; sleep 7; done
+  t2_build:
+    if: inputs.stage == 'teacher2'
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '22' }
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.11' }
+      - run: |
+          pip install --quiet torch torchvision --index-url https://download.pytorch.org/whl/cpu
+          pip install --quiet pillow numpy scikit-learn onnx onnxruntime open_clip_torch
+      - working-directory: distill
+        run: |
+          mkdir -p data && node rast.js ../feed/all_labels.json 224 data/lab224
+          python judges2.py t2
+          ls -la t2
+          npm i -s --no-save onnxruntime-node@1.20.1
+          # the same judge through night.js (what steering and validation use), on real windows from a short steered line
+          JUDGES2=t2 node -e "const N=require('./night.js'),W=require('./walkmods.js'),R=require('./raster.js'),L=require('./live/steer.js');(async()=>{await N.load();const g=JSON.parse(require('fs').readFileSync('night_results/final.json')).settings[0].g;const E=L.create(W,R,g,1,{lambda:2});const w=E.ask();const t0=Date.now();const o=await N.judge(w);console.log('night.js judge2 ok,',w.length,'windows in',((Date.now()-t0)/1000).toFixed(1),'s; first',o[0].map(v=>v.toFixed(3)).join(' '))})()"
+          mkdir -p onnx2 && cp t2/judges2.json t2/calib2.json onnx2/
+      - uses: actions/upload-artifact@v4
+        with: { name: 'teacher2', path: 'distill/t2', retention-days: 30 }
+      - run: |
+          git config user.name "taste-bot"; git config user.email "taste-bot@users.noreply.github.com"
+          git add -f distill/onnx2 distill/night_results/judges2_report.json && git commit -m "new big judge: DINOv2 large + CLIP large (scorers, calibration, report; image models kept as a run artifact)" && for i in 1 2 3 4 5; do git pull --rebase --autostash && git push && break; sleep 7; done
