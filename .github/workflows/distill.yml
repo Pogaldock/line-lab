@@ -14,7 +14,16 @@ env:
   ONNXRUNTIME_NODE_INSTALL_CUDA: skip   # onnxruntime-node would otherwise fetch GPU binaries from GitHub releases on Linux
 
 jobs:
+  preflight:   # runs first on every dispatch; every job waits for it, so a bad plan can't start
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions: { contents: read, actions: read }
+    steps:
+      - uses: actions/checkout@v4
+      - run: pip install -q pyyaml; python3 tools/preflight.py '${{ inputs.stage }}' '${{ inputs.run_id }}'
+        env: { GH_TOKEN: '${{ github.token }}' }
   bench:
+    needs: preflight
     if: inputs.stage == 'bench'
     runs-on: ubuntu-latest
     steps:
@@ -34,6 +43,7 @@ jobs:
           git config user.name "taste-bot"; git config user.email "taste-bot@users.noreply.github.com"
           git add distill/bench.json && git commit -m "judge model benchmark" && git pull --rebase --autostash && git push || echo nothing
   gen:
+    needs: preflight
     if: inputs.stage == 'gen'
     runs-on: ubuntu-latest
     strategy:
@@ -62,6 +72,7 @@ jobs:
           git config user.name "taste-bot"; git config user.email "taste-bot@users.noreply.github.com"
           git add -f distill/data/gen.json.gz && git commit -m "training windows" && git pull --rebase --autostash && git push
   teach:
+    needs: preflight
     if: inputs.stage == 'train'
     runs-on: ubuntu-latest
     strategy:
@@ -82,6 +93,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with: { name: 'emb-${{ matrix.shard }}', path: 'distill/emb_${{ matrix.shard }}.npz' }
   student:
+    needs: preflight
     if: inputs.stage == 'student'
     runs-on: ubuntu-latest
     strategy:
@@ -131,6 +143,7 @@ jobs:
           git config user.name "taste-bot"; git config user.email "taste-bot@users.noreply.github.com"
           git add distill/student.json distill/student_w.json && git commit -m "small judge copied from ${{ inputs.teacher }}" && git pull --rebase --autostash && git push
   bench1:
+    needs: preflight
     if: inputs.stage == 'bench1'
     runs-on: ubuntu-latest
     strategy:
@@ -153,6 +166,7 @@ jobs:
           git config user.name "taste-bot"; git config user.email "taste-bot@users.noreply.github.com"
           git add distill/bench && git commit -m "bench ${{ matrix.key }}" && for i in 1 2 3 4 5; do git pull --rebase --autostash && git push && break; sleep $((RANDOM % 10 + 3)); done
   onnx:
+    needs: preflight
     if: inputs.stage == 'onnx'
     runs-on: ubuntu-latest
     steps:
@@ -172,6 +186,7 @@ jobs:
           git config user.name "taste-bot"; git config user.email "taste-bot@users.noreply.github.com"
           git add distill/onnx && git commit -m "full DINO judge (ONNX)" && for i in 1 2 3; do git pull --rebase --autostash && git push && break; sleep 5; done
   batchgen:
+    needs: preflight
     if: inputs.stage == 'batch'
     runs-on: ubuntu-latest
     strategy:
@@ -202,6 +217,7 @@ jobs:
           git config user.name "taste-bot"; git config user.email "taste-bot@users.noreply.github.com"
           git add distill/batches && git commit -m "card batch ${{ inputs.batch }}" && for i in 1 2 3; do git pull --rebase --autostash && git push && break; sleep 5; done
   alldata:
+    needs: preflight
     if: inputs.stage == 'alldata'
     runs-on: ubuntu-latest
     steps:
@@ -221,6 +237,7 @@ jobs:
           git config user.name "taste-bot"; git config user.email "taste-bot@users.noreply.github.com"
           git add distill/alldata.json && git commit -m "older data test" && for i in 1 2 3; do git pull --rebase --autostash && git push && break; sleep 5; done
   combine:
+    needs: preflight
     if: inputs.stage == 'combine' || inputs.stage == 'lcurve'
     runs-on: ubuntu-latest
     steps:
@@ -240,6 +257,7 @@ jobs:
           git config user.name "taste-bot"; git config user.email "taste-bot@users.noreply.github.com"
           git add distill/combine.json distill/lcurve.json; git commit -m "${{ inputs.stage }}" && for i in 1 2 3; do git pull --rebase --autostash && git push && break; sleep 5; done
   qd1:
+    needs: preflight
     if: inputs.stage == 'qd' || inputs.stage == 'qds'
     runs-on: ubuntu-latest
     timeout-minutes: 200
@@ -346,6 +364,7 @@ jobs:
           git config user.name "taste-bot"; git config user.email "taste-bot@users.noreply.github.com"
           f=distill/qd_archive${{ inputs.stage == 'qds' && '_steered' || '' }}.json; [ "$f" != distill/qd_archive.json ] && mv distill/qd_archive.json $f; git add $f && git commit -m "quality-diversity archive (${{ inputs.stage }})" && for i in 1 2 3; do git pull --rebase --autostash && git push && break; sleep 5; done
   bc:
+    needs: preflight
     if: inputs.stage == 'bc'
     runs-on: ubuntu-latest
     timeout-minutes: 120
@@ -362,6 +381,7 @@ jobs:
           git config user.name "taste-bot"; git config user.email "taste-bot@users.noreply.github.com"
           git add distill/bc_policy.json distill/bc_parity.json distill/bc_log.txt && git commit -m "step policy (behavioural cloning)" && for i in 1 2 3 4 5; do git pull --rebase --autostash && git push && break; sleep 7; done
   judges:
+    needs: preflight
     if: inputs.stage == 'judges'
     runs-on: ubuntu-latest
     timeout-minutes: 90
@@ -383,6 +403,7 @@ jobs:
           git config user.name "taste-bot"; git config user.email "taste-bot@users.noreply.github.com"
           git add distill/onnx_night && git commit -m "judges for the night: full, half A, half B, two image-feature axes" && for i in 1 2 3 4 5; do git pull --rebase --autostash && git push && break; sleep 7; done
   n_dose:
+    needs: preflight
     if: inputs.stage == 'night'
     runs-on: ubuntu-latest
     timeout-minutes: 120
@@ -514,6 +535,7 @@ jobs:
           git config user.name "taste-bot"; git config user.email "taste-bot@users.noreply.github.com"
           git add distill/night_results && git commit -m "overnight results: pressure sweep, CMA-MAE search, fresh-seed rescoring" && for i in 1 2 3 4 5; do git pull --rebase --autostash && git push && break; sleep 7; done
   nlong:
+    needs: preflight
     if: inputs.stage == 'nlong'
     runs-on: ubuntu-latest
     timeout-minutes: 90
@@ -547,6 +569,7 @@ jobs:
           cd .. && git config user.name "taste-bot" && git config user.email "taste-bot@users.noreply.github.com"
           git add distill/night_results/long.json && git commit -m "30 steered 3-minute stretches from the top overnight settings" && for i in 1 2 3 4 5; do git pull --rebase --autostash && git push && break; sleep 7; done
   longgen:
+    needs: preflight
     if: inputs.stage == 'long'
     runs-on: ubuntu-latest
     timeout-minutes: 200
@@ -577,6 +600,7 @@ jobs:
           git config user.name "taste-bot"; git config user.email "taste-bot@users.noreply.github.com"
           git add distill/long && git commit -m "long skater paths" && for i in 1 2 3; do git pull --rebase --autostash && git push && break; sleep 5; done
   s_gen:
+    needs: preflight
     if: inputs.stage == 'live' || inputs.stage == 'live2'
     permissions: { contents: read, actions: read }
     runs-on: ubuntu-latest
@@ -679,6 +703,7 @@ jobs:
           git config user.name "taste-bot"; git config user.email "taste-bot@users.noreply.github.com"
           git add -f distill/live/results && git commit -m "live student judge: training report and validation (${{ inputs.batch }})" && for i in 1 2 3 4 5; do git pull --rebase --autostash && git push && break; sleep 7; done
   b_val:
+    needs: preflight
     if: inputs.stage == 'bestof'
     runs-on: ubuntu-latest
     timeout-minutes: 150
@@ -716,6 +741,7 @@ jobs:
           git config user.name "taste-bot"; git config user.email "taste-bot@users.noreply.github.com"
           git add -f distill/live/results/bestof*.json && git commit -m "best-only validation (${{ inputs.batch }})" && for i in 1 2 3 4 5; do git pull --rebase --autostash && git push && break; sleep 7; done
   a_gen:
+    needs: preflight
     if: inputs.stage == 'alphabet'
     runs-on: ubuntu-latest
     strategy:
@@ -750,6 +776,7 @@ jobs:
           git config user.name "taste-bot"; git config user.email "taste-bot@users.noreply.github.com"
           git add -f distill/write/found_alphabet.json && git commit -m "found alphabet" && for i in 1 2 3 4 5; do git pull --rebase --autostash && git push && break; sleep 7; done
   j2_feat:
+    needs: preflight
     if: inputs.stage == 'judge2'
     runs-on: ubuntu-latest
     timeout-minutes: 150
@@ -793,6 +820,7 @@ jobs:
           git config user.name "taste-bot"; git config user.email "taste-bot@users.noreply.github.com"
           git add -f distill/night_results/judge2.json && git commit -m "judge2: bigger image models and a combination, scored on precision at the top" && for i in 1 2 3 4 5; do git pull --rebase --autostash && git push && break; sleep 7; done
   t2_build:
+    needs: preflight
     if: inputs.stage == 'teacher2'
     runs-on: ubuntu-latest
     timeout-minutes: 300
