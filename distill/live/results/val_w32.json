@@ -1,0 +1,42 @@
+{
+ "n_lines": 120,
+ "plain": {
+  "full": 0.502,
+  "A": 0.381,
+  "B": 0.435,
+  "minAB": 0.021,
+  "n": 40
+ },
+ "teacher": {
+  "full": 1.954,
+  "A": 1.694,
+  "B": 1.926,
+  "minAB": 1.477,
+  "n": 40,
+  "score_ms_per_check": 1133.3
+ },
+ "student": {
+  "full": 1.523,
+  "A": 1.297,
+  "B": 1.551,
+  "minAB": 1.055,
+  "n": 40,
+  "score_ms_per_check": 5.0
+ },
+ "student_minus_plain": {
+  "mean": 1.034,
+  "se": 0.13,
+  "n": 40
+ },
+ "teacher_minus_plain": {
+  "mean": 1.456,
+  "se": 0.123,
+  "n": 40
+ },
+ "student_minus_teacher": {
+  "mean": -0.422,
+  "se": 0.091,
+  "n": 40
+ },
+ "share_of_teacher_gain": 0.71
+}
