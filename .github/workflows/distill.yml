@@ -180,7 +180,7 @@ jobs:
         with: { node-version: '22' }
       - working-directory: distill
         run: |
-          npm i -s --no-save onnxruntime-node@1.20.1
+          for i in 1 2 3; do npm i -s --no-save onnxruntime-node@1.20.1 && break; echo 'npm retry'; sleep 20; done
           node -e "const fs=require('fs'),J=require('./onnx/judge.json');let b='';for(let k=0;k<J.parts;k++)b+=fs.readFileSync('onnx/judge_'+k+'.txt','utf8');fs.writeFileSync('judge.onnx',Buffer.from(b,'base64'))"
           export ARMS=${{ inputs.arms }}; export CAP=${{ inputs.arms == 'r4' && '450' || '' }}; for k in 0 1 2 3; do node batchgen.js $(( ${{ matrix.job }} * 4 + k )) 100 5 ${{ inputs.batch }} c_$k.json & done; wait
           node -e "let a=[];for(const k of [0,1,2,3])a=a.concat(require('./c_'+k+'.json'));require('fs').writeFileSync('cards_${{ matrix.job }}.json',JSON.stringify(a));console.log(a.length)"
@@ -249,7 +249,7 @@ jobs:
         with: { node-version: '22' }
       - working-directory: distill
         run: |
-          npm i -s --no-save onnxruntime-node@1.20.1
+          for i in 1 2 3; do npm i -s --no-save onnxruntime-node@1.20.1 && break; echo 'npm retry'; sleep 20; done
           node -e "const fs=require('fs'),J=require('./onnx/judge.json');let b='';for(let k=0;k<J.parts;k++)b+=fs.readFileSync('onnx/judge_'+k+'.txt','utf8');fs.writeFileSync('judge.onnx',Buffer.from(b,'base64'))"
           export STEER=${{ inputs.stage == 'qds' && '6' || '0' }}; M=${{ inputs.stage == 'qds' && '110' || '20' }}
           for k in 0 1 2 3; do node qd.js run $(( ${{ matrix.job }} * 4 + k + 1 )) $M a_$k.json & done; wait
@@ -285,7 +285,7 @@ jobs:
         with: { name: 'qdm1', path: distill }
       - working-directory: distill
         run: |
-          npm i -s --no-save onnxruntime-node@1.20.1
+          for i in 1 2 3; do npm i -s --no-save onnxruntime-node@1.20.1 && break; echo 'npm retry'; sleep 20; done
           node -e "const fs=require('fs'),J=require('./onnx/judge.json');let b='';for(let k=0;k<J.parts;k++)b+=fs.readFileSync('onnx/judge_'+k+'.txt','utf8');fs.writeFileSync('judge.onnx',Buffer.from(b,'base64'))"
           export STEER=${{ inputs.stage == 'qds' && '6' || '0' }}; M=${{ inputs.stage == 'qds' && '110' || '20' }}
           for k in 0 1 2 3; do node qd.js run $(( ${{ matrix.job }} * 4 + k + 501 )) $M b_$k.json qd_m1.json & done; wait
@@ -321,7 +321,7 @@ jobs:
         with: { name: 'qdm2', path: distill }
       - working-directory: distill
         run: |
-          npm i -s --no-save onnxruntime-node@1.20.1
+          for i in 1 2 3; do npm i -s --no-save onnxruntime-node@1.20.1 && break; echo 'npm retry'; sleep 20; done
           node -e "const fs=require('fs'),J=require('./onnx/judge.json');let b='';for(let k=0;k<J.parts;k++)b+=fs.readFileSync('onnx/judge_'+k+'.txt','utf8');fs.writeFileSync('judge.onnx',Buffer.from(b,'base64'))"
           export STEER=${{ inputs.stage == 'qds' && '6' || '0' }}
           for k in 0 1 2 3; do node qd.js reeval qd_m2.json 8 $(( ${{ matrix.job }} * 4 + k )) 100 r_$k.json & done; wait
@@ -392,7 +392,7 @@ jobs:
         with: { node-version: '22' }
       - working-directory: distill
         run: |
-          npm i -s --no-save onnxruntime-node@1.20.1
+          for i in 1 2 3; do npm i -s --no-save onnxruntime-node@1.20.1 && break; echo 'npm retry'; sleep 20; done
           node -e "const fs=require('fs'),J=require('./onnx_night/judges.json');let b='';for(let k=0;k<J.parts;k++)b+=fs.readFileSync('onnx_night/judges_'+k+'.txt','utf8');fs.writeFileSync('judges.onnx',Buffer.from(b,'base64'))"
           for k in 0 1 2 3; do node night.js dose $(( ${{ matrix.job }} * 4 + k )) 100 d_$k.json & done; wait
           node -e "let a=[];for(const k of [0,1,2,3])a=a.concat(require('./d_'+k+'.json'));require('fs').writeFileSync('dose_${{ matrix.job }}.json',JSON.stringify(a))"
@@ -437,7 +437,7 @@ jobs:
       - working-directory: distill
         run: |
           pip install --quiet numpy "ribs==0.7.1"
-          npm i -s --no-save onnxruntime-node@1.20.1
+          for i in 1 2 3; do npm i -s --no-save onnxruntime-node@1.20.1 && break; echo 'npm retry'; sleep 20; done
           node -e "const fs=require('fs'),J=require('./onnx_night/judges.json');let b='';for(let k=0;k<J.parts;k++)b+=fs.readFileSync('onnx_night/judges_'+k+'.txt','utf8');fs.writeFileSync('judges.onnx',Buffer.from(b,'base64'))"
           python search.py ${{ matrix.island }} 235 ${{ needs.n_pick.outputs.lam }} island_${{ matrix.island }}.json
       - uses: actions/upload-artifact@v4
@@ -479,7 +479,7 @@ jobs:
         with: { name: 'cands', path: distill }
       - working-directory: distill
         run: |
-          npm i -s --no-save onnxruntime-node@1.20.1
+          for i in 1 2 3; do npm i -s --no-save onnxruntime-node@1.20.1 && break; echo 'npm retry'; sleep 20; done
           node -e "const fs=require('fs'),J=require('./onnx_night/judges.json');let b='';for(let k=0;k<J.parts;k++)b+=fs.readFileSync('onnx_night/judges_'+k+'.txt','utf8');fs.writeFileSync('judges.onnx',Buffer.from(b,'base64'))"
           for k in 0 1 2 3; do node night.js rescore cands.json $(( ${{ matrix.job }} * 4 + k )) 100 r_$k.json ${{ needs.n_pick.outputs.lam }} & done; wait
           node -e "let a=[];for(const k of [0,1,2,3])a=a.concat(require('./r_'+k+'.json'));require('fs').writeFileSync('rescore_${{ matrix.job }}.json',JSON.stringify(a))"
@@ -523,7 +523,7 @@ jobs:
         with: { node-version: '22' }
       - working-directory: distill
         run: |
-          npm i -s --no-save onnxruntime-node@1.20.1
+          for i in 1 2 3; do npm i -s --no-save onnxruntime-node@1.20.1 && break; echo 'npm retry'; sleep 20; done
           node -e "const fs=require('fs'),J=require('./onnx_night/judges.json');let b='';for(let k=0;k<J.parts;k++)b+=fs.readFileSync('onnx_night/judges_'+k+'.txt','utf8');fs.writeFileSync('judges.onnx',Buffer.from(b,'base64'))"
           for k in 0 1 2 3; do node night.js long $(( ${{ matrix.job }} * 4 + k )) 32 l_$k.json 2 180 & done; wait
           node -e "let a=[];for(const k of [0,1,2,3])a=a.concat(require('./l_'+k+'.json'));require('fs').writeFileSync('long_${{ matrix.job }}.json',JSON.stringify(a))"
@@ -556,7 +556,7 @@ jobs:
         with: { node-version: '22' }
       - working-directory: distill
         run: |
-          npm i -s --no-save onnxruntime-node@1.20.1
+          for i in 1 2 3; do npm i -s --no-save onnxruntime-node@1.20.1 && break; echo 'npm retry'; sleep 20; done
           node -e "const fs=require('fs'),J=require('./onnx/judge.json');let b='';for(let k=0;k<J.parts;k++)b+=fs.readFileSync('onnx/judge_'+k+'.txt','utf8');fs.writeFileSync('judge.onnx',Buffer.from(b,'base64'))"
           for k in 0 1 2 3; do node longgen.js $(( ${{ matrix.job }} * 4 + k )) 300 seg_$(( ${{ matrix.job }} * 4 + k )).json > log_$k.txt 2>&1 & done; wait; tail -n 2 log_*.txt
       - uses: actions/upload-artifact@v4
@@ -594,7 +594,7 @@ jobs:
           github-token: ${{ github.token }}
       - working-directory: distill
         run: |
-          npm i -s --no-save onnxruntime-node@1.20.1
+          for i in 1 2 3; do npm i -s --no-save onnxruntime-node@1.20.1 && break; echo 'npm retry'; sleep 20; done
           node -e "const fs=require('fs'),J=require('./onnx_night/judges.json');let b='';for(let k=0;k<J.parts;k++)b+=fs.readFileSync('onnx_night/judges_'+k+'.txt','utf8');fs.writeFileSync('judges.onnx',Buffer.from(b,'base64'))"
           MIN=${{ (inputs.batch == 'b1' || startsWith(inputs.batch, 'w') || startsWith(inputs.batch, 't')) && (inputs.stage == 'live2' && '130' || '25') || '2' }}
           [ "${{ inputs.stage }}" = live2 ] && export JUDGES2=t2 && cp t2/judges2.json t2/calib2.json . 2>/dev/null; true
@@ -644,7 +644,7 @@ jobs:
           github-token: ${{ github.token }}
       - working-directory: distill
         run: |
-          npm i -s --no-save onnxruntime-node@1.20.1
+          for i in 1 2 3; do npm i -s --no-save onnxruntime-node@1.20.1 && break; echo 'npm retry'; sleep 20; done
           node -e "const fs=require('fs'),J=require('./onnx_night/judges.json');let b='';for(let k=0;k<J.parts;k++)b+=fs.readFileSync('onnx_night/judges_'+k+'.txt','utf8');fs.writeFileSync('judges.onnx',Buffer.from(b,'base64'))"
           [ "${{ inputs.stage }}" = live2 ] && export JUDGES2=t2; true
           NS=${{ (inputs.batch == 'b1' || startsWith(inputs.batch, 'w') || startsWith(inputs.batch, 't')) && '20' || '1' }}; SECS=${{ (inputs.batch == 'b1' || startsWith(inputs.batch, 'w') || startsWith(inputs.batch, 't')) && '60' || '15' }}
@@ -685,7 +685,7 @@ jobs:
         with: { node-version: '22' }
       - working-directory: distill
         run: |
-          npm i -s --no-save onnxruntime-node@1.20.1
+          for i in 1 2 3; do npm i -s --no-save onnxruntime-node@1.20.1 && break; echo 'npm retry'; sleep 20; done
           node -e "const fs=require('fs'),J=require('./onnx_night/judges.json');let b='';for(let k=0;k<J.parts;k++)b+=fs.readFileSync('onnx_night/judges_'+k+'.txt','utf8');fs.writeFileSync('judges.onnx',Buffer.from(b,'base64'))"
           mkdir -p sdir && cp live/results/student_weights_${{ inputs.batch }}.json sdir/student_weights.json
           for k in 0 1 2 3; do node live/sbest.js $(( ${{ matrix.part }} * 4 + k )) 80 b_$k.json sdir 16 54 3 1.5 & done; wait
@@ -814,10 +814,7 @@ jobs:
           ls feats || true
           ok=0; for i in 1 2 3; do FEATS=feats python judges2.py t2 && ok=1 && break; echo "retry $i (model download can time out)"; sleep 45; done; [ $ok = 1 ]
           ls -la t2
-          rm -rf ~/.cache/torch ~/.cache/pip ~/.cache/huggingface feats data/*.u8; df -h . | tail -1   # free disk before the node check (2.4 GB of models on disk)
-          npm i --no-save onnxruntime-node@1.20.1 2>&1 | tail -5
-          # the same judge through night.js (what steering and validation use), on real windows from a short steered line
-          JUDGES2=t2 node -e "const N=require('./night.js'),W=require('./walkmods.js'),R=require('./raster.js'),L=require('./live/steer.js');(async()=>{await N.load();const g=JSON.parse(require('fs').readFileSync('night_results/final.json')).settings[0].g;const E=L.create(W,R,g,1,{lambda:2});const w=E.ask();const t0=Date.now();const o=await N.judge(w);console.log('night.js judge2 ok,',w.length,'windows in',((Date.now()-t0)/1000).toFixed(1),'s; first',o[0].map(v=>v.toFixed(3)).join(' '))})()"
+          # (the night.js check of the new judge happens in the live2 smoke run, which uses it through the same code)
           mkdir -p onnx2 && cp t2/judges2.json t2/calib2.json onnx2/
       - uses: actions/upload-artifact@v4
         with: { name: 'teacher2', path: 'distill/t2', retention-days: 30 }
