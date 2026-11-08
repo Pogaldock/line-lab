@@ -772,6 +772,7 @@ jobs:
     if: inputs.stage == 'teacher2'
     runs-on: ubuntu-latest
     timeout-minutes: 300
+    permissions: { contents: write, actions: read }
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -781,10 +782,19 @@ jobs:
       - run: |
           pip install --quiet torch torchvision --index-url https://download.pytorch.org/whl/cpu
           pip install --quiet pillow numpy scikit-learn onnx onnxruntime open_clip_torch
+      - uses: actions/download-artifact@v4   # features of both models on the rated lines, already computed by the judge2 run
+        with:
+          path: distill/feats
+          pattern: 'feat-*'
+          merge-multiple: true
+          run-id: ${{ inputs.run_id || '42418999204' }}
+          github-token: ${{ github.token }}
+        continue-on-error: true
       - working-directory: distill
         run: |
           mkdir -p data && node rast.js ../feed/all_labels.json 224 data/lab224
-          python judges2.py t2
+          ls feats || true
+          FEATS=feats python judges2.py t2
           ls -la t2
           npm i -s --no-save onnxruntime-node@1.20.1
           # the same judge through night.js (what steering and validation use), on real windows from a short steered line

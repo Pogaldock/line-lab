@@ -25,7 +25,9 @@ def fold(X, idx, C):
     return a, c
 feats, heads = {}, {}
 for key, C in KEYS:
-    t0 = time.time(); X = models.load(key)(ink); feats[key] = X; print(key, X.shape, f'{time.time() - t0:.0f}s', flush=True)
+    t0 = time.time(); fp = os.environ.get('FEATS', '') + f'/feat_{key}.npy'
+    X = np.load(fp) if os.environ.get('FEATS') and os.path.exists(fp) else models.load(key)(ink)   # reuse features already computed (judge2 run) when given
+    feats[key] = X; print(key, X.shape, 'reused' if os.environ.get('FEATS') and os.path.exists(fp) else 'computed', f'{time.time() - t0:.0f}s', flush=True)
     H = {}
     for name, idx in [('full', np.arange(len(y))), ('A', iA), ('B', iB)]:
         a, c = fold(X, idx, C); s = X @ a + c; H[name] = (a, c, float(s.mean()), float(s.std()))   # standardise each scorer by its spread over the rated lines
