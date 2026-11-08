@@ -3,6 +3,7 @@
 These exist because time was wasted on avoidable job decisions (Nov 2026). Follow them before starting any job that takes more than ~5 minutes.
 
 ## Before starting a job
+- Start every distill.yml run with `tools/dispatch.sh <stage> [batch] [run_id]`, never a direct dispatch. It runs `tools/preflight.py` (time limits vs planned minutes, memory per runner, the input artifact exists) and refuses to start if a check fails or the commit isn't pushed. When a new kind of mistake costs a run, add a check for it to preflight.py, not only a line here.
 - Write the critical path in one line: what has to happen in order, what can run side by side, and the expected wall time. If two heavy steps are independent, they go in separate matrix jobs, never one after the other in one job.
 - Check what already exists before computing anything: previous run artifacts (`gh api repos/Pogaldock/line-lab/actions/runs/<id>/artifacts`), files in `distill/night_results`, `distill/live/results`. Reuse features, scores and data instead of recomputing them.
 - Every new or changed stage gets a smoke run first (tiny inputs, a few minutes) that goes all the way through, including the commit and push step, before the full run.
