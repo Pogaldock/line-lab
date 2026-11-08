@@ -631,7 +631,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with: { name: 'sdata-${{ matrix.part }}', path: 'distill/sdata', retention-days: 5 }
   s_train:
-    if: always() && (inputs.stage == 'live' || inputs.stage == 'live2') && needs.s_gen.result != 'cancelled'
+    if: always() && (inputs.stage == 'live' || inputs.stage == 'live2') && needs.s_gen.result != 'cancelled' && needs.s_gen.result != 'skipped'
     needs: s_gen
     runs-on: ubuntu-latest
     timeout-minutes: 240
