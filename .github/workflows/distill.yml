@@ -812,7 +812,7 @@ jobs:
         run: |
           mkdir -p data && node rast.js ../feed/all_labels.json 224 data/lab224
           ls feats || true
-          FEATS=feats python judges2.py t2
+          ok=0; for i in 1 2 3; do FEATS=feats python judges2.py t2 && ok=1 && break; echo "retry $i (model download can time out)"; sleep 45; done; [ $ok = 1 ]
           ls -la t2
           rm -rf ~/.cache/torch ~/.cache/pip ~/.cache/huggingface feats data/*.u8; df -h . | tail -1   # free disk before the node check (2.4 GB of models on disk)
           npm i --no-save onnxruntime-node@1.20.1 2>&1 | tail -5
