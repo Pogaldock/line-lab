@@ -5,7 +5,7 @@
 // capped at 0.90, the highest rate seen in your ratings). Note: teacherBest is graded by the same judges that chose it (optimistic);
 // studentBest is the fairer number. Usage: node live/sbest.js <part> <parts> <out> <studentDir> [nSettings] [secs] [K] [thr]
 const D = __dirname + '/../'; process.chdir(D);
-const fs = require('fs'), N = require(D + 'night.js'), W = require(D + 'walkmods.js'), R = require(D + 'raster.js'), L = require('./steer.js'), ST = require('./student.js'), cal = require('./calib.json');
+const fs = require('fs'), N = require(D + 'night.js'), W = require(D + 'walkmods.js'), R = require(D + 'raster.js'), L = require('./steer.js'), ST = require('./student.js'), cal = require(process.env.CALIB ? D + process.env.CALIB : './calib.json');   // CALIB: calibration for another big judge (e.g. onnx2/calib2.json)
 const [part, parts, out, sdir] = [+process.argv[2], +process.argv[3], process.argv[4], process.argv[5]], NS = +(process.argv[6] || 20), SECS = +(process.argv[7] || 54), K = +(process.argv[8] || 3), THR = +(process.argv[9] || 1.5);
 const P = (z) => Math.min(0.9, 1 / (1 + Math.exp(-(cal.a * z + cal.b)))), zOf = (v) => ((v[1] - cal.mA) / cal.sA + (v[2] - cal.mB) / cal.sB) / 2;
 (async () => { await N.load(); const SJ = JSON.parse(fs.readFileSync(sdir + '/student_weights.json')), F = ST.make(SJ);
